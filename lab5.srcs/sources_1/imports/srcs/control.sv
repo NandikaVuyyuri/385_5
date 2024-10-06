@@ -74,104 +74,117 @@ module control (
 	end
    
 
+always_comb
+begin
+    case (opcode)
+        0001:  // ADD
+        begin
+            if (ir[5] == 1'b0)
+                dr_out = sr1_ + sr2_;
+            else
+                dr_out = sr1_ + sext;
+            ld_reg = 1'b1;
+            sig_output = 1'b1;
+        end
 
-//    always_comb
-//    begin
-//    case(opcode)
-    
-//        0001:           //ADD
-//        begin
-//        dr_out=sr1_+ sext;
-//        cc_signal = 1;
-//        end    
-      
-      
-      
-//        0101:           //AND
-//        begin
-//        dr_out=sr1_ & sext;
-//        cc_signal = 1;
-//        end
-        
-        
-    
-//        0000:           //branch
-//        begin
-//        end      
-            
-//        1100:           //JUMP
-//        begin
-//        dr_out= ir[8:6];
-//        end     
-            
-//        0100:           //JSR
-//        begin
-//        if(ld_mar ==1)
-//            mar_ <= ir[8:6]+sext[ir[5:0]];
-//        if(ir[11] == 0) 
-//            ld_mar = ir[8:6];
-//        else 
-//            pc_out = pc_in+sext[ir[10:0]];
-//       end     
-            
-            
-//        0010:           //LD
-//        begin
-        
-//        ld_mar= pc_in+sext[ir[8:0]] + 1;
-//        //mdr <= mem_rdata
-//        cc_signal = 1;
+        0101:  // AND
+        begin
+            if (ir[5] == 1'b0)
+                dr_out = sr1_ & sr2_;
+            else
+                dr_out = sr1_ & sext;
+            ld_reg = 1'b1;
+            sig_output = 1'b1;
+        end
 
-//        end
-        
-        
-//        1010:           //ldi
-//        begin
-//        dr_out= pc_in+sext[ir[8:0]] + 1;
-//        cc_signal = 1;
-//        end
-    
-//        0110:           //ldr
-//        begin
-//        cc_signal = 1;
-//    end
-    
-        
-//        1110:           //lea
-//        begin
-//    end
-    
-//        1001:           //not
-//        begin
-//        cc_signal = 1;
-//        end
-        
-        
-//        1000:           //ldr
-//        begin
-//        cc_signal = 1;
-//        end
-        
-//        0011:           //st
-//        begin
-//        end
-        
-//        1011:           //sti
-//        begin
-//        end
-        
-        
-//        0111:           //str
-//        begin
-//        end
-        
-        
-//        1111:           //trap
-//        begin
-//        end
-        
-//      end  
-//    endcase
+        0000:  // BR
+        begin
+            if (ben)
+                pcmux = 2'b01;
+            ld_pc = 1'b1;
+        end
+
+        1100:  // JMP
+        begin
+            pcmux = 2'b10;
+            ld_pc = 1'b1;
+        end
+
+        0100:  // JSR / JSRR
+        begin
+            if (ir[11] == 1'b1)
+                pcmux = 2'b01;
+            else
+                pcmux = 2'b10;
+            ld_pc = 1'b1;
+        end
+
+        0010:  // LD
+        begin
+            ld_mar = 1'b1;
+            pcmux = 2'b01;
+            ld_pc = 1'b1;
+            state_nxt = s_33_1;
+        end
+
+        1010:  // LDI
+        begin
+            ld_mar = 1'b1;
+            pcmux = 2'b01;
+            ld_pc = 1'b1;
+            state_nxt = s_33_1;
+        end
+
+        0110:  // LDR
+        begin
+            ld_mar = 1'b1;
+            ld_pc = 1'b1;
+            state_nxt = s_33_1;
+        end
+
+        1110:  // LEA
+        begin
+            dr_out = pc_in + sext;
+            ld_reg = 1'b1;
+            sig_output = 1'b1;
+        end
+
+        1001:  // NOT
+        begin
+            dr_out = ~sr1_;
+            ld_reg = 1'b1;
+            sig_output = 1'b1;
+        end
+
+        0011:  // ST
+        begin
+            ld_mar = 1'b1;
+            mdr = sr1_;
+            mem_wr_ena = 1'b1;
+        end
+
+        1011:  // STI
+        begin
+            ld_mar = 1'b1;
+            state_nxt = s_33_1;
+        end
+
+        0111:  // STR
+        begin
+            ld_mar = 1'b1;
+            mdr = sr1_;
+            mem_wr_ena = 1'b1;
+        end
+
+        1111:  // TRAP
+        begin
+            ld_mar = 1'b1;
+            state_nxt = s_33_1;
+        end
+    endcase
+end
+
+
 
 	always_comb
 	begin 
