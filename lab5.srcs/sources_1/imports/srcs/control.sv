@@ -24,7 +24,7 @@ module control (
 	
 	output logic [15:0]       mar,
     output logic [15:0]       mdr,
-//    output              sig_output,
+    output logic [15:0]       sig_output,
 
 	output logic		ld_mar,
 	output logic		ld_mdr,
@@ -78,6 +78,7 @@ module control (
 always_comb
 begin
     case (opcode)
+    
         0001:  // ADD
         begin
             if (ir[5] == 1'b0)
@@ -85,6 +86,8 @@ begin
             else
                 dr_out = sr1_ + sext;
             ld_reg = 1'b1;
+            sig_output = 1'b1;
+
         end
 
         0101:  // AND
@@ -94,6 +97,8 @@ begin
             else
                 dr_out = sr1_ & sext;
             ld_reg = 1'b1;
+            sig_output = 1'b1;
+
         end
 
         0000:  // BR
@@ -109,7 +114,7 @@ begin
             ld_pc = 1'b1;
         end
 
-        0100:  // JSR / JSRR
+        0100:  // JSR 
         begin
             if (ir[11] == 1'b1)
                 pcmux = 2'b01;
@@ -124,47 +129,32 @@ begin
             pcmux = 2'b01;
             ld_pc = 1'b1;
             state_nxt = s_33_1;
+             sig_output = 1'b1;
+
         end
 
-        1010:  // LDI
-        begin
-            ld_mar = 1'b1;
-            pcmux = 2'b01;
-            ld_pc = 1'b1;
-            state_nxt = s_33_1;
-        end
+
 
         0110:  // LDR
         begin
             ld_mar = 1'b1;
             ld_pc = 1'b1;
             state_nxt = s_33_1;
+            sig_output = 1'b1;
+
         end
 
-        1110:  // LEA
-        begin
-            dr_out = pc_in + sext;
-            ld_reg = 1'b1;
-        end
+
 
         1001:  // NOT
         begin
             dr_out = ~sr1_;
             ld_reg = 1'b1;
+            sig_output = 1'b1;
+
         end
 
-        0011:  // ST
-        begin
-            ld_mar = 1'b1;
-            mdr = sr1_;
-            mem_wr_ena = 1'b1;
-        end
 
-        1011:  // STI
-        begin
-            ld_mar = 1'b1;
-            state_nxt = s_33_1;
-        end
 
         0111:  // STR
         begin
@@ -172,12 +162,12 @@ begin
             mdr = sr1_;
             mem_wr_ena = 1'b1;
         end
-
-        1111:  // TRAP
+        
+        1101:  // PAUSE
         begin
-            ld_mar = 1'b1;
-            state_nxt = s_33_1;
+        ld_led = 1'b1;
         end
+
     endcase
 end
 
@@ -273,3 +263,5 @@ end
 			default :;
 		endcase
 	end
+	
+endmodule
