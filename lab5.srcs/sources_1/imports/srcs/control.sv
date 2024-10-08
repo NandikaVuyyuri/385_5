@@ -1,5 +1,3 @@
-
-
 module control (
 	input logic			clk, 
 	input logic			reset,
