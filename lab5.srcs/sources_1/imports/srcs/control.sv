@@ -17,14 +17,14 @@ module control (
     input   logic [15:0]    sr1_,
     input   logic [15:0]    sr2_,
     input   logic [15:0]    dr_in,
-    input   logic [15:0]    ld_reg,
+//    input   logic [15:0]    ld_reg,
     input   logic [15:0]    sext,
     
     input  logic [15:0]     pc_in,
 	
-	output [15:0]       mar,
-    output [15:0]       mdr,
-    output              sig_output,
+	output logic [15:0]       mar,
+    output logic [15:0]       mdr,
+    output logic [15:0]       sig_output,
 
 	output logic		ld_mar,
 	output logic		ld_mdr,
@@ -43,12 +43,15 @@ module control (
 	output logic		mem_wr_ena,  // Mem Write Enable
 	
 	output  logic [15:0]   pc_out,
+	output  logic [15:0]   ld_reg,
+	
     output  logic [15:0] dr_out
 	
 );
    
     logic  cc_signal;
     logic  mar_ = mar;
+    //logic ld_reg_local = ld_reg;
 
 
 	enum logic [4:0] {
@@ -75,6 +78,7 @@ module control (
 always_comb
 begin
     case (opcode)
+    
         0001:  // ADD
         begin
             if (ir[5] == 1'b0)
@@ -83,6 +87,7 @@ begin
                 dr_out = sr1_ + sext;
             ld_reg = 1'b1;
             sig_output = 1'b1;
+
         end
 
         0101:  // AND
@@ -93,6 +98,7 @@ begin
                 dr_out = sr1_ & sext;
             ld_reg = 1'b1;
             sig_output = 1'b1;
+
         end
 
         0000:  // BR
@@ -108,7 +114,7 @@ begin
             ld_pc = 1'b1;
         end
 
-        0100:  // JSR / JSRR
+        0100:  // JSR 
         begin
             if (ir[11] == 1'b1)
                 pcmux = 2'b01;
@@ -123,49 +129,32 @@ begin
             pcmux = 2'b01;
             ld_pc = 1'b1;
             state_nxt = s_33_1;
+             sig_output = 1'b1;
+
         end
 
-        1010:  // LDI
-        begin
-            ld_mar = 1'b1;
-            pcmux = 2'b01;
-            ld_pc = 1'b1;
-            state_nxt = s_33_1;
-        end
+
 
         0110:  // LDR
         begin
             ld_mar = 1'b1;
             ld_pc = 1'b1;
             state_nxt = s_33_1;
+            sig_output = 1'b1;
+
         end
 
-        1110:  // LEA
-        begin
-            dr_out = pc_in + sext;
-            ld_reg = 1'b1;
-            sig_output = 1'b1;
-        end
+
 
         1001:  // NOT
         begin
             dr_out = ~sr1_;
             ld_reg = 1'b1;
             sig_output = 1'b1;
+
         end
 
-        0011:  // ST
-        begin
-            ld_mar = 1'b1;
-            mdr = sr1_;
-            mem_wr_ena = 1'b1;
-        end
 
-        1011:  // STI
-        begin
-            ld_mar = 1'b1;
-            state_nxt = s_33_1;
-        end
 
         0111:  // STR
         begin
@@ -173,12 +162,12 @@ begin
             mdr = sr1_;
             mem_wr_ena = 1'b1;
         end
-
-        1111:  // TRAP
+        
+        1101:  // PAUSE
         begin
-            ld_mar = 1'b1;
-            state_nxt = s_33_1;
+        ld_led = 1'b1;
         end
+
     endcase
 end
 
