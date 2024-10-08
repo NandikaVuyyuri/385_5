@@ -17,14 +17,14 @@ module control (
     input   logic [15:0]    sr1_,
     input   logic [15:0]    sr2_,
     input   logic [15:0]    dr_in,
-    input   logic [15:0]    ld_reg,
+//    input   logic [15:0]    ld_reg,
     input   logic [15:0]    sext,
     
     input  logic [15:0]     pc_in,
 	
-	output [15:0]       mar,
-    output [15:0]       mdr,
-    output              sig_output,
+	output logic [15:0]       mar,
+    output logic [15:0]       mdr,
+//    output              sig_output,
 
 	output logic		ld_mar,
 	output logic		ld_mdr,
@@ -43,12 +43,15 @@ module control (
 	output logic		mem_wr_ena,  // Mem Write Enable
 	
 	output  logic [15:0]   pc_out,
+	output  logic [15:0]   ld_reg,
+	
     output  logic [15:0] dr_out
 	
 );
    
     logic  cc_signal;
     logic  mar_ = mar;
+    //logic ld_reg_local = ld_reg;
 
 
 	enum logic [4:0] {
@@ -82,7 +85,6 @@ begin
             else
                 dr_out = sr1_ + sext;
             ld_reg = 1'b1;
-            sig_output = 1'b1;
         end
 
         0101:  // AND
@@ -92,7 +94,6 @@ begin
             else
                 dr_out = sr1_ & sext;
             ld_reg = 1'b1;
-            sig_output = 1'b1;
         end
 
         0000:  // BR
@@ -144,14 +145,12 @@ begin
         begin
             dr_out = pc_in + sext;
             ld_reg = 1'b1;
-            sig_output = 1'b1;
         end
 
         1001:  // NOT
         begin
             dr_out = ~sr1_;
             ld_reg = 1'b1;
-            sig_output = 1'b1;
         end
 
         0011:  // ST
@@ -274,5 +273,3 @@ end
 			default :;
 		endcase
 	end
-	
-endmodule
