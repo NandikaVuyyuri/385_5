@@ -30,7 +30,8 @@ logic ld_ir;
 logic ld_pc; 
 logic ld_led;
 
-logic gate_pc;
+logic gate_pc;  //signals for when to put pc, mdr, etc onto databus,
+    //OR should these be more like temp variables that hold pc, mdr, etc and later databus=gate??
 logic gate_mdr;
 
 logic [1:0] pcmux;
@@ -44,9 +45,13 @@ logic [15:0] bus;
 
 logic pcmux_data;
 
-
 assign mem_addr = mar;
 assign mem_wdata = mdr;
+
+logic [15:0] sr1_out;
+logic [15:0] sr2_out;
+
+logic [15:0] alu_sr2;   //second register input for alu
 
 // State machine, you need to fill in the code here as well
 // .* auto-infers module input/output connections which have the same name
@@ -78,11 +83,18 @@ control cpu_control (
 );
 
 register_unit register_unit (
+    .clk        (clk),
+    .reset      (reset),
+    .run_i      (run_i),
+    .continue_i (continue_i),
+    
     .sr1_in     (sr1_in),
     .sr2_in     (sr2_in),
     .dr         (dr),
-    .ld_reg     (ld_reg)
-
+    .ld_reg     (ld_reg),
+    
+    .sr1_out    (sr1_out),
+    .sr2_out    (sr2_out)
 );
 
 sign_extender  sign_extender(
@@ -90,6 +102,23 @@ sign_extender  sign_extender(
     .sext       (sext)
 
 );
+
+sr2mux sr2mux(
+    .clk    (clk),
+    .sr2    (sr2_out),
+    .sext   (sext),
+    
+    .sr_out (alu_sr2)   //2nd register input for alu
+);
+
+alu alu(
+    .clk    (clk),
+    .A      (),
+    .B      (alu_sr2),
+    .aluk   (),     //PLS FIX - aluk DEPENDS ON OPCODE, COMES FROM CONTROL
+    .d_out  ()  //SHOULD THIS GO TO gate_alu, OR DEPEND ON gate_alu ??
+);
+
 
 assign led_o = ir;
 assign hex_display_debug = ir;
@@ -115,9 +144,6 @@ load_reg #(.DATA_WIDTH(16)) pc_reg (
 );
 
 
-
-
-
 always_comb begin
 		if(pc_gate)
 		  bus = pc;
@@ -128,26 +154,7 @@ always_comb begin
 		else if(gate_mdr)
 		 bus = mdr;
 
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 always_ff @(posedge clk) 
