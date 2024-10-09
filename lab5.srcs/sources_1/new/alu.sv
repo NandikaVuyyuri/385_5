@@ -4,7 +4,7 @@
 module alu(    
     input logic [15:0] A,
     input logic [15:0] B,
-    input logic [2:0] aluk, //aluk chooses which operation to do
+    input logic [1:0] aluk, //aluk chooses which operation to do
     
     output logic [15:0] d_out
     );

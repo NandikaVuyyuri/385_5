@@ -122,6 +122,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/new/databus_demux.sv">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/srcs/hex_driver.sv">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../lab5_provided_fa24/srcs/hex_driver.sv"/>

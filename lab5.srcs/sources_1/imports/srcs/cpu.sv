@@ -3,8 +3,8 @@ module cpu (
     input   logic        reset,
 
 
-    input   logic [15:0]    sr1_in,
-    input   logic [15:0]    sr2_in,
+    input   logic [2:0]    sr1_in,  //3 bit inputs for when doing operations
+    input   logic [2:0]    sr2_in,
     input   logic [15:0]    dr,
     input   logic [15:0]    ld_reg,
 
@@ -29,10 +29,14 @@ logic ld_mdr;
 logic ld_ir; 
 logic ld_pc; 
 logic ld_led;
-
-logic gate_pc;  //signals for when to put pc, mdr, etc onto databus,
-    //OR should these be more like temp variables that hold pc, mdr, etc and later databus=gate??
-logic gate_mdr;
+// DATABUS and GATES LOGIC ~~~
+logic [15:0] gate_marmux;
+logic [15:0] gate_pc;
+logic [15:0] gate_alu;
+logic [15:0] gate_mdr;
+logic [15:0] gate_sig;  //signal for which gate to put onto databus
+logic [15:0] databus;
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 logic [1:0] pcmux;
 
@@ -41,7 +45,6 @@ logic [15:0] mdr;
 logic [15:0] ir;
 logic [15:0] pc;
 logic ben;
-logic [15:0] bus;
 
 logic pcmux_data;
 
@@ -51,8 +54,8 @@ assign mem_wdata = mdr;
 logic [15:0] sr1_out;
 logic [15:0] sr2_out;
 
-logic aluk; //tells alu which operation to do
-logic [15:0] alu_sr2;   //second register input for alu
+logic [1:0] aluk;   //tells alu which operation to do (2 bit)
+logic [15:0] alu_op2;   //second register input for alu
 
 // State machine, you need to fill in the code here as well
 // .* auto-infers module input/output connections which have the same name
@@ -88,13 +91,14 @@ control cpu_control (
 register_unit register_unit (
     .clk        (clk),
     .reset      (reset),
-    .run_i      (run_i),
-    .continue_i (continue_i),
+    //.run_i      (run_i),
+    //.continue_i (continue_i),
     
-    .sr1_in     (sr1_in),
-    .sr2_in     (sr2_in),
+    .d_in       (databus),  //gets input from databus
     .dr         (dr),
     .ld_reg     (ld_reg),
+    .sr1_in     (sr1_in),
+    .sr2_in     (sr2_in),
     
     .sr1_out    (sr1_out),
     .sr2_out    (sr2_out)
@@ -110,16 +114,26 @@ sr2mux sr2mux(
     .sr2    (sr2_out),
     .sext   (sext),
     
-    .sr_out (alu_sr2)   //2nd register input for alu
+    .sr_out (alu_op2)   //2nd register input for alu
 );
 
 alu alu(
     .A      (sr1_out),
-    .B      (alu_sr2),
+    .B      (alu_op2),
     .aluk   (aluk),     //aluk DEPENDS ON OPCODE, COMES FROM CONTROL
-    .d_out  ()  //SHOULD THIS GO TO gate_alu, OR DEPEND ON gate_alu ??
+    .d_out  (gate_alu)  //SHOULD THIS GO TO gate_alu, OR DEPEND ON gate_alu ??
 );
 
+databus_demux databus_demuxer(
+    .gate_sig       (),     //FIX - CONNECT GATE SIG FROM CONTROL
+    
+    .gate_marmux    (gate_marmux), //1000
+    .gate_pc        (gate_pc),     //0100
+    .gate_alu       (gate_alu),    //0010
+    .gate_mdr       (gate_mdr),    //0001
+   
+    .final_gate     (databus)
+);
 
 assign led_o = ir;
 assign hex_display_debug = ir;
@@ -147,13 +161,13 @@ load_reg #(.DATA_WIDTH(16)) pc_reg (
 
 always_comb begin
 		if(pc_gate)
-		  bus = pc;
+		  databus = pc;
 //		else if(gate_alu)
-//		  bus = gate_alu;
+//		  databus = gate_alu;
 //		else if(gate_marmux)
-//		  bus = gate_marmux;
+//		  databus = gate_marmux;
 		else if(gate_mdr)
-		 bus = mdr;
+		 databus = mdr;
 
 end
 
