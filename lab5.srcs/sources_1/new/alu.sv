@@ -1,9 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 
-module alu(
-    input logic clk,
-    
+module alu(    
     input logic [15:0] A,
     input logic [15:0] B,
     input logic [2:0] aluk, //aluk chooses which operation to do
@@ -12,7 +10,11 @@ module alu(
     );
     
     //values for the aluk mux inputs (00, 01, 10, 11)
-    enum logic [2:0] {alu_add, alu_and, alu_not, alu_pass} cur_aluk;
+    define alu_add = 2'b00;
+    define alu_and = 2'b01;
+    define alu_not = 2'b10;
+    define alu_pass = 2'b11;
+    
     //hold the outputs of each operation, only the chosen one gets passed out
     logic adder_out;
     logic add_out;
@@ -61,11 +63,6 @@ module alu(
         endcase
     end
 
-//update aluk every clock cycle
-//    always_ff @(posedge clk)
-//    begin
-//        cur_aluk <= aluk; //ENUM STUFF BROKEN - PLS FIX
-//    end
 endmodule
 
 

@@ -2,8 +2,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module sr2mux(
-    input clk,
-    
     input logic [15:0] sr2,
     input logic [15:0] sext,
     input logic sext_sig,   //when =1, output sext
@@ -15,7 +13,7 @@ module sr2mux(
     
     always_comb
     begin
-        if(cur_sext) begin
+        if(sext_sig) begin
             sr_out = sext;
         end
         else begin
@@ -23,8 +21,4 @@ module sr2mux(
         end
     end
     
-    always_ff @(posedge clk)
-    begin
-        cur_sext <= sext_sig;
-    end
 endmodule

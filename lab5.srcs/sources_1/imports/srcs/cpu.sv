@@ -51,6 +51,7 @@ assign mem_wdata = mdr;
 logic [15:0] sr1_out;
 logic [15:0] sr2_out;
 
+logic aluk; //tells alu which operation to do
 logic [15:0] alu_sr2;   //second register input for alu
 
 // State machine, you need to fill in the code here as well
@@ -79,7 +80,9 @@ control cpu_control (
 
     .pcmux       (pcmux),
     .mem_mem_ena (mem_mem_ena), //enables memory access
-    .mem_wr_ena  (mem_wr_ena)
+    .mem_wr_ena  (mem_wr_ena),
+    
+    .aluk   (aluk)
 );
 
 register_unit register_unit (
@@ -104,7 +107,6 @@ sign_extender  sign_extender(
 );
 
 sr2mux sr2mux(
-    .clk    (clk),
     .sr2    (sr2_out),
     .sext   (sext),
     
@@ -112,10 +114,9 @@ sr2mux sr2mux(
 );
 
 alu alu(
-    .clk    (clk),
-    .A      (),
+    .A      (sr1_out),
     .B      (alu_sr2),
-    .aluk   (),     //PLS FIX - aluk DEPENDS ON OPCODE, COMES FROM CONTROL
+    .aluk   (aluk),     //aluk DEPENDS ON OPCODE, COMES FROM CONTROL
     .d_out  ()  //SHOULD THIS GO TO gate_alu, OR DEPEND ON gate_alu ??
 );
 
