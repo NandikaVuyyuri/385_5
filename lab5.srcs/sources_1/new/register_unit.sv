@@ -1,8 +1,6 @@
 module register_unit(
     input   logic        clk,
     input   logic        reset,
-    //input   logic        run_i,
-    //input   logic        continue_i,
    
     input   logic [15:0]    d_in,   //data to put into a register
     input   logic [2:0]     dr,  //dr chooses which register to put data into

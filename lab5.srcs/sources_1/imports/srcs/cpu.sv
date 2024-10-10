@@ -37,16 +37,16 @@ logic [15:0] gate_mdr;
 logic [15:0] gate_sig;  //signal for which gate to put onto databus
 logic [15:0] databus;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-assign gate_pc = pc;
+assign gate_pc = pcmux_data; //pc that goes to databus
 assign gate_mdr = mdr;
 
-logic [1:0] pcmux; //pcmux signal that determines what goes into pc
+logic [1:0] pcmux_sig; //pcmux signal that determines what goes into pc
 logic [15:0] pcmux_data;
 
 logic [15:0] mar;
 logic [15:0] mdr;
 logic [15:0] ir;
-logic [15:0] pc;
+logic [15:0] pc;    //pc_out from the pc register
 logic ben;
 
 assign mem_addr = mar;
@@ -54,6 +54,8 @@ assign mem_wdata = mdr;
 
 logic [15:0] sr1_out;
 logic [15:0] sr2_out;
+
+logic [3:0] gate_sig;   //signals what gate goes to databus
 
 logic [1:0] aluk;   //tells alu which operation to do (2 bit)
 logic [15:0] alu_op2;   //second register input for alu
@@ -64,13 +66,27 @@ logic [15:0] alu_op2;   //second register input for alu
 // but can also lead to confusing code if used too commonly
 
 control cpu_control (
+//~~~INPUTS~~~
     .clk         (clk),
     .reset       (reset),
-    .run_i       (run_i),
-    .continue_i  (continue_i), //resume operation after pause
     .ir          (ir),      //holds the current instruction being executed
     .ben         (ben),     //tells cpu whether a branch should be taken 
-
+    .opcode      (),
+    .continue_i  (continue_i), //resume operation after pause
+    .run_i       (run_i),
+    //pc_gate,  //NOT USED - DELETE FROM CONTROL
+    //bus,	 //NOT USED
+    .gate_alu    (gate_alu),
+    .gate_marmux (gate_marmux),
+    .sr1_       (sr1_out),
+    .sr2_       (sr2_out),
+    .dr_in      (dr),
+    //sext  //NOT USED
+    //pc_in      //NOT USED
+//~~~OUTPUTS~~~
+    .mar        (),
+    .mdr        (),
+    .sig_output     (),
     .ld_mar      (ld_mar),  
     .ld_mdr      (ld_mdr),
     .ld_ir       (ld_ir),
@@ -79,21 +95,21 @@ control cpu_control (
 
     .gate_pc     (gate_pc), //allows PC output to be sent to bus
     .gate_mdr    (gate_mdr), //allows mdr output to be sent to bus
-    .gate_alu    (gate_alu),
-    .gate_marmux (gate_marmux),
 
-    .pcmux       (pcmux),
+    .pcmux_sig       (pcmux_sig),
     .mem_mem_ena (mem_mem_ena), //enables memory access
     .mem_wr_ena  (mem_wr_ena),
+    //.pc_out     (),   //not used
+    .ld_reg     (ld_reg),
+    //.dr_out     (),   //not used
+    .gate_sig   (gate_sig),
     
     .aluk   (aluk)
 );
 
-register_unit register_unit (
+register_unit register_unit (   //DONE~~~
     .clk        (clk),
     .reset      (reset),
-    //.run_i      (run_i),
-    //.continue_i (continue_i),
     
     .d_in       (databus),  //gets input from databus
     .dr         (dr),
@@ -105,28 +121,28 @@ register_unit register_unit (
     .sr2_out    (sr2_out)
 );
 
-sign_extender  sign_extender(
+sign_extender  sign_extender(   //NOT USED~~~
     .x          (x),
     .sext       (sext)
 );
 
 logic [15:0] ir4sext = ir[4:0];
-sr2mux sr2mux(
+sr2mux sr2mux(                  //DONE~~~
     .sr2    (sr2_out),
     .sext   (ir4sext),
     
     .sr_out (alu_op2)   //2nd register input for alu
 );
 
-alu alu(
+alu alu(                        //DONE~~~
     .A      (sr1_out),
     .B      (alu_op2),
     .aluk   (aluk),     //aluk DEPENDS ON OPCODE, COMES FROM CONTROL
     .d_out  (gate_alu)  //SHOULD THIS GO TO gate_alu, OR DEPEND ON gate_alu ??
 );
 
-databus_demux databus_demuxer(
-    .gate_sig       (),     //FIX - CONNECT GATE SIG FROM CONTROL
+databus_demux databus_demuxer(  //DONE~~~
+    .gate_sig       (gate_sig),
     
     .gate_marmux    (gate_marmux), //1000
     .gate_pc        (gate_pc),     //0100
@@ -136,7 +152,7 @@ databus_demux databus_demuxer(
     .final_gate     (databus)
 );
 
-addr_mux addr_mux(  // PLS FIX - CONNECT ADDR MUX SIGNALS TO CONTROL
+addr_mux addr_mux(              // PLS FIX - CONNECT ADDR MUX SIGNALS TO CONTROL
     .addr1_sig  (), //0 for pc, 1 for sr1
     .addr2_sig  (), //2 bit
     .sr1        (sr1_out), //mux 1
@@ -146,8 +162,8 @@ addr_mux addr_mux(  // PLS FIX - CONNECT ADDR MUX SIGNALS TO CONTROL
     .marmux_out (gate_marmux)
 );
 
-pcmux pcmuxer( //PLS FIX - CONNECT PCMUX SIGNAL TO CONTROL
-    .pcmux_sig  (pcmux),    //signal
+pcmux pcmuxer(                  //DONE~~~
+    .pcmux_sig  (pcmux_sig),    //signal
     .databus    (databus),
     .marmux (gate_marmux),
     .pc_inc (pc+1),  //pc+1, maybe just input pc?
@@ -178,20 +194,6 @@ load_reg #(.DATA_WIDTH(16)) pc_reg (
 
     .data_q(pc)
 );
-
-
-always_comb begin
-		if(pc_gate)
-		  databus = pc;
-//		else if(gate_alu)
-//		  databus = gate_alu;
-//		else if(gate_marmux)
-//		  databus = gate_marmux;
-		else if(gate_mdr)
-		 databus = mdr;
-
-end
-
 
 always_ff @(posedge clk) 
     begin
