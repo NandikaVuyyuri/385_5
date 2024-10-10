@@ -53,9 +53,8 @@ module control (
 );
     logic  cc_signal;
     logic  mar_ = mar;
-    //logic ld_reg_local = ld_reg;
-
-
+    logic N, Z, P;  // Declaration of NZP condition codes
+    
 	enum logic [6:0] {
 		halted, 
 		s_1,  //add
@@ -104,13 +103,11 @@ module control (
 	//end
    
 
-//always_comb
-//begin
     case (opcode)
     
         0001:  // ADD
         begin
-            state = s_1;
+            state <= s_1;
         end
 
         0101:  // AND
@@ -145,18 +142,17 @@ module control (
 
         0000:  // BR
         begin
-            state = s_0;
+            state = s_0;  // Enter the branch state
         end
 
-        
         1101:  // PAUSE
         begin
         ld_led = 1'b1;
         end
 
     endcase
-end
 //end
+end
 
 
 always_comb
@@ -175,18 +171,6 @@ begin
      
     pcmux = 2'b00;
 
-    // Assign relevant control signals based on current state
-//		if(pc_gate)
-//		begin
-//		  bus = pc_in;
-//		  end
-////		else if(gate_alu)
-////		  bus = gate_alu;
-////		else if(gate_marmux)
-////		  bus = gate_marmux;
-//		else if(gate_mdr)
-//		 bus = mdr;
-
     //default sig
        gate_sig = 0000;
     case (state)        // PLEASE FIX SIGNALS - CHECK SCHEMATIC CAREFULLY
@@ -197,6 +181,11 @@ begin
             sig_output = 1'b1;
             aluk = 2'b00;
             gate_sig = 0010;
+
+            //  condition codes based on result
+            if (dr_in == 0) Z = 1; else Z = 0;
+            if (dr_in[15] == 1) N = 1; else N = 0;
+            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
           end
         
         s_5 :       //and
@@ -205,6 +194,11 @@ begin
             sig_output = 1'b1;
             gate_sig = 0010;
             aluk = 2'b01;
+
+            //  condition codes based on result
+            if (dr_in == 0) Z = 1; else Z = 0;
+            if (dr_in[15] == 1) N = 1; else N = 0;
+            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
            end
            
         s_9 :       //not
@@ -213,6 +207,11 @@ begin
             sig_output = 1'b1;
             gate_sig = 0010;
             aluk = 2'b10;
+
+            //  condition codes based on result
+            if (dr_in == 0) Z = 1; else Z = 0;
+            if (dr_in[15] == 1) N = 1; else N = 0;
+            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
            end
     //ldr
         s_6 :
@@ -261,13 +260,16 @@ begin
 //            ld_pc = 1'b1;
             end
             
-    //br
-        s_0 :
+    //br (Branch instruction state)
+        s_0 : 
             begin
-            //ld_pc = 1'b1;
-            end
-        s_22 :
-            begin
+                // Check BEN based on condition codes (NZP) and instruction bits
+                if ((ir[11] & N) | (ir[10] & Z) | (ir[9] & P)) begin
+                    // If BEN is true, update PC to branch target address
+                    pcmux = 2'b01;  // Select PC + offset
+                    ld_pc = 1'b1;   // Load the new PC value
+                end
+                state_nxt = s_18;  // After branch, go to fetch state
             end
 
     //fetch
@@ -296,7 +298,7 @@ begin
         default : ;
     endcase
 end 
-
+//end
 
 always_comb
 begin
@@ -332,11 +334,11 @@ begin
             state_nxt = s_23;
         s_23 :
             state_nxt = s_16_1;
-        s_16_2 :
+        s_16_1 :
             state_nxt = s_16_2;
-        s_16_3 :
-            state_nxt = s_16_3;
         s_16_2 :
+            state_nxt = s_16_3;
+        s_16_3 :
             state_nxt = s_18;
         
         //jsr
@@ -351,15 +353,15 @@ begin
             
         //br
         s_0 :
-            state_nxt = s_22;
+            state_nxt = s_18;
         s_22 :
             state_nxt = s_18;
             
-        //fetch states
+        //fetch
         s_18 : 
-            state_nxt = s_33_1; //notice that we usually have 'r' here, but you will need to add extra states instead 
-        s_33_1 :                 //e.g. s_33_2, etc. how many? as a hint, note that the bram is synchronous, in addition, 
-            state_nxt = s_33_2;   //it has an additional output register. 
+            state_nxt = s_33_1; // Entering the fetch cycle
+        s_33_1 :                 
+            state_nxt = s_33_2;   
         s_33_2 :
             state_nxt = s_33_3;
         s_33_3 : 
@@ -367,6 +369,7 @@ begin
         s_35 : 
             state_nxt = s_32;
 
+        //pause states
         pause_ir1 : 
             if (continue_i) 
                 state_nxt = pause_ir2;
