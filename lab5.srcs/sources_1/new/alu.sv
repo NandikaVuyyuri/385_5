@@ -10,10 +10,10 @@ module alu(
     );
     
     //values for the aluk mux inputs (00, 01, 10, 11)
-    define alu_add = 2'b00;
-    define alu_and = 2'b01;
-    define alu_not = 2'b10;
-    define alu_pass = 2'b11;
+    logic alu_add = 2'b00;
+    logic alu_and = 2'b01;
+    logic alu_not = 2'b10;
+    logic alu_pass = 2'b11;
     
     //hold the outputs of each operation, only the chosen one gets passed out
     logic adder_out;
