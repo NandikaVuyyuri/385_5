@@ -46,17 +46,17 @@ module control (
 	output  logic [15:0]   ld_reg,
 	
     output  logic [15:0] dr_out,
-    
+    output logic [3:0] gate_sig,
+
     output logic [2:0] aluk
 	
 );
-   
     logic  cc_signal;
     logic  mar_ = mar;
     //logic ld_reg_local = ld_reg;
 
 
-	enum logic [4:0] {
+	enum logic [6:0] {
 		halted, 
 		s_1,  //add
 		s_5,  //and
@@ -97,15 +97,15 @@ module control (
 
 	always_ff @ (posedge clk)
 	begin
-		if (reset) 
-			state <= halted;
-		else 
-			state <= state_nxt;
-	end
+	if (reset) 
+		state <= halted;
+	else 
+		state <= state_nxt;
+	//end
    
 
-always_comb
-begin
+//always_comb
+//begin
     case (opcode)
     
         0001:  // ADD
@@ -148,15 +148,6 @@ begin
             state = s_0;
         end
 
-//        0010:  // LD
-//        begin
-//            ld_mar = 1'b1;
-//            pcmux = 2'b01;
-//            ld_pc = 1'b1;
-//            state_nxt = s_33_1;
-//             sig_output = 1'b1;
-
-//        end
         
         1101:  // PAUSE
         begin
@@ -165,7 +156,7 @@ begin
 
     endcase
 end
-
+//end
 
 
 always_comb
@@ -196,6 +187,8 @@ begin
 //		else if(gate_mdr)
 //		 bus = mdr;
 
+    //default sig
+       gate_sig = 0000;
     case (state)        // PLEASE FIX SIGNALS - CHECK SCHEMATIC CAREFULLY
         halted: ; 
         s_1 :       //add
@@ -203,12 +196,14 @@ begin
             ld_reg = 1'b1;
             sig_output = 1'b1;
             aluk = 2'b00;
+            gate_sig = 0010;
           end
         
         s_5 :       //and
            begin
             ld_reg = 1'b1;
             sig_output = 1'b1;
+            gate_sig = 0010;
             aluk = 2'b01;
            end
            
@@ -216,6 +211,7 @@ begin
            begin
             ld_reg = 1'b1;
             sig_output = 1'b1;
+            gate_sig = 0010;
             aluk = 2'b10;
            end
     //ldr
