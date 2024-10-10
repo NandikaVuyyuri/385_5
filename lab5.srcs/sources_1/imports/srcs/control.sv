@@ -34,8 +34,11 @@ module control (
 						
 	output logic		gate_pc,
 	output logic		gate_mdr,
+	output logic [15:0] marmux_out,
+    output  logic [15:0] mem_addr,      //memory address
+
 						
-	output logic [1:0]	pcmux,
+	output logic [1:0]	pcmux_sig,
 	
 	//You should add additional control signals according to the SLC-3 datapath design
 
@@ -169,7 +172,7 @@ begin
     gate_pc = 1'b0;
     gate_mdr = 1'b0;
      
-    pcmux = 2'b00;
+    pcmux_sig = 2'b00;
 
     //default sig
        gate_sig = 0000;
@@ -216,47 +219,71 @@ begin
     //ldr
         s_6 :
            begin
-//            ld_mar = 1'b1;
-//            ld_pc = 1'b1;
-//            state_nxt = s_33_1;
-//            sig_output = 1'b1;
+
+        //load B+off6 into MAR
+        
+            ld_mar= 1'b0;
+            //mdr= mar
+        //M[MAR]->MDR
+//        mdr = mem_addr[mar];
+        //dr
+//        dr_out = mdr;
+//        //set cc
+//            if (dr_in == 0) Z = 1; else Z = 0;
+//            if (dr_in[15] == 1) N = 1; else N = 0;
+//            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
+
            end
         s_25_1, s_25_2, s_25_3 : //you may have to think about this as well to adapt to ram with wait-states
            begin
-//               mem_mem_ena = 1'b1;
-//               ld_mdr = 1'b1;
+               mem_mem_ena = 1'b1;
+               ld_mdr = 1'b1;
+        mdr = mem_addr[mar];
+
            end
         s_27 :
            begin
+            dr_out = mdr;
+        //set cc
+            if (dr_in == 0) Z = 1; else Z = 0;
+            if (dr_in[15] == 1) N = 1; else N = 0;
+            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
            end
            
     //str
         s_7 :
             begin
-//            ld_mar = 1'b1;
-//            mdr = sr1_;
-//            mem_wr_ena = 1'b1;
+
+
+        ld_mar= 1'b0;
+
             end
         s_23 :
             begin
+              ld_mdr = 1'b1;
+
+
             end
         s_16_1, s_16_2, s_16_3 :
             begin
+           mem_wr_ena= 1'b0;
             end
             
     //jsr
         s_4 :
             begin
-            //ld_pc = 1'b1;
+             pcmux_sig = 2'b01;
             end
         s_21 :
             begin
+            pcmux_sig = 2'b00;
             end
     
     //jmp
         s_12 :
             begin
-//            pcmux = 2'b10;
+            pcmux_sig = 2'b10;
+
 //            ld_pc = 1'b1;
             end
             
@@ -266,7 +293,7 @@ begin
                 // Check BEN based on condition codes (NZP) and instruction bits
                 if ((ir[11] & N) | (ir[10] & Z) | (ir[9] & P)) begin
                     // If BEN is true, update PC to branch target address
-                    pcmux = 2'b01;  // Select PC + offset
+                    pcmux_sig = 2'b01;  // Select PC + offset
                     ld_pc = 1'b1;   // Load the new PC value
                 end
                 state_nxt = s_18;  // After branch, go to fetch state
@@ -277,7 +304,7 @@ begin
             begin 
                 gate_pc = 1'b1;
                 ld_mar = 1'b1;
-                pcmux = 2'b00;
+                pcmux_sig = 2'b00;
                 ld_pc = 1'b1;
             end
         s_33_1, s_33_2, s_33_3 : //you may have to think about this as well to adapt to ram with wait-states
