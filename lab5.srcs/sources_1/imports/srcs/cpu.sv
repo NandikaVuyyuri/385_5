@@ -30,23 +30,24 @@ logic ld_ir;
 logic ld_pc; 
 logic ld_led;
 // DATABUS and GATES LOGIC ~~~
-logic [15:0] gate_marmux;
-logic [15:0] gate_pc;
+logic [15:0] gate_marmux;   //all of these are same as pc, mdr, etc...
+logic [15:0] gate_pc;       //they just have gate in front to show that they are put onto data bus
 logic [15:0] gate_alu;
 logic [15:0] gate_mdr;
 logic [15:0] gate_sig;  //signal for which gate to put onto databus
 logic [15:0] databus;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+assign gate_pc = pc;
+assign gate_mdr = mdr;
 
-logic [1:0] pcmux;
+logic [1:0] pcmux; //pcmux signal that determines what goes into pc
+logic [15:0] pcmux_data;
 
-logic [15:0] mar; 
+logic [15:0] mar;
 logic [15:0] mdr;
 logic [15:0] ir;
 logic [15:0] pc;
 logic ben;
-
-logic pcmux_data;
 
 assign mem_addr = mar;
 assign mem_wdata = mdr;
@@ -107,12 +108,12 @@ register_unit register_unit (
 sign_extender  sign_extender(
     .x          (x),
     .sext       (sext)
-
 );
 
+logic [15:0] ir4sext = ir[4:0];
 sr2mux sr2mux(
     .sr2    (sr2_out),
-    .sext   (sext),
+    .sext   (ir4sext),
     
     .sr_out (alu_op2)   //2nd register input for alu
 );
@@ -135,8 +136,28 @@ databus_demux databus_demuxer(
     .final_gate     (databus)
 );
 
-assign led_o = ir;
-assign hex_display_debug = ir;
+addr_mux addr_mux(  // PLS FIX - CONNECT ADDR MUX SIGNALS TO CONTROL
+    .addr1_sig  (), //0 for pc, 1 for sr1
+    .addr2_sig  (), //2 bit
+    .sr1        (sr1_out), //mux 1
+    .pc         (gate_pc),  //mux 1
+    .ir         (ir),  //mux 2
+    
+    .marmux_out (gate_marmux)
+);
+
+pcmux pcmuxer( //PLS FIX - CONNECT PCMUX SIGNAL TO CONTROL
+    .pcmux_sig  (pcmux),    //signal
+    .databus    (databus),
+    .marmux (gate_marmux),
+    .pc_inc (pc+1),  //pc+1, maybe just input pc?
+    
+    .pcmux_out  (pcmux_data)
+);
+
+//whats displayed on LEDs 
+assign led_o = pc;
+assign hex_display_debug = pc;
 
 load_reg #(.DATA_WIDTH(16)) ir_reg (
     .clk    (clk),
@@ -153,7 +174,7 @@ load_reg #(.DATA_WIDTH(16)) pc_reg (
     .reset(reset),
 
     .load(ld_pc),
-    .data_i(pc + 1), //load pc with pc+1, in 5.2 change this to pcmux_data
+    .data_i(pcmux_data), //load pc with pc+1, in 5.2 change this to pcmux_data
 
     .data_q(pc)
 );
@@ -195,11 +216,5 @@ always_ff @(posedge clk)
         mdr <= mem_rdata; //load data to mdr
     end
 end
-
-
-//contents of IR are displayed on LEDs 
-assign led_o = ir;
-assign hex_display_debug = ir;
-
 
 endmodule
