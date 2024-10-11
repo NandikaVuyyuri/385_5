@@ -33,7 +33,9 @@ module control (
     output logic [1:0] addr2_sig,
 
     output logic [2:0] aluk,
-    output logic sr2mux_sig
+    output logic sr2mux_sig,
+    output logic [1:0] sr1_sig,
+    output logic dr_sig
 );
 
     //gate signals for each gate
@@ -152,19 +154,23 @@ begin
     ld_cc = 1'b0;
      
     pcmux_sig = 2'b00;
-    mio_en = 1'b0;  //mio_en only changes to 1 in state 23
+    mio_en = 1'b1;  //mio_en only changes to 0 in state 23
+    //usually always reading memory data into mdr
     gate_sig = 4'b0000;
     addr1_sig = 1'b0;
     addr2_sig = 2'b00;
     
     aluk = 3'b000;
     sr2mux_sig = 1'b0;
+    sr1_sig = 2'b01;
+    dr_sig = 1'b0;
 	
 	ld_reg = 1'b0;
 
     case (state)        // PLEASE FIX SIGNALS - CHECK SCHEMATIC CAREFULLY
-        halted: ; 
-        s_1 :       //add
+        halted: ;
+//add
+        s_1 :
           begin
             ld_reg = 1'b1;
             aluk = 2'b00;
@@ -173,8 +179,8 @@ begin
             //sr2 depends on ir (use sr2 or ir4sext)
             sr2mux_sig = ir[5];
           end
-        
-        s_5 :       //and
+//and
+        s_5 :
            begin
             ld_reg = 1'b1;
             aluk = 2'b01;
@@ -182,34 +188,32 @@ begin
             ld_cc = 1'b1;
             sr2mux_sig = ir[5];
            end
-           
-        s_9 :       //not
+//not
+        s_9 :
            begin
             ld_reg = 1'b1;
             aluk = 2'b10;
             gate_sig = alu_sig; //0010;
             ld_cc = 1'b1;
            end
-    //ldr
-        s_6 :
+//ldr
+        s_6 :   //MAR <- b+off6
            begin
-        //load B+off6 into MAR
             ld_mar= 1'b0;
             //put b+off6 onto bus
-            addr1_sig = 1;
-            addr2_sig = 01;
+            addr1_sig = 1'b1;
+            addr2_sig = 2'b01;
             //set gate_mar
             gate_sig = marmux_sig; //4'b1000;
            end
-        s_25_1, s_25_2, s_25_3 : //you may have to think about this as well to adapt to ram with wait-states
+           
+        s_25_1, s_25_2, s_25_3 : //mdr <- m[mar] (mar was loaded in previous state, so now get the memory at that mar)
            begin
                mem_mem_ena = 1'b1;
                ld_mdr = 1'b1;
-               //mdr = mem_addr[mar]; can not do this
-               mio_en = 0; //redundant
-
            end
-        s_27 :
+           
+        s_27 :  //dr <- mdr, set cc
            begin
             //load dr with mdr
             ld_reg = 1'b1;  //ld reg signal
@@ -217,50 +221,64 @@ begin
             ld_cc = 1'b1; //set cc
            end
            
-    //str
-        s_7 :
+ //str
+        s_7 :   //MAR <- b+off6
+           begin
+            ld_mar= 1'b0;
+            //put b+off6 onto bus
+            addr1_sig = 1'b1;
+            addr2_sig = 2'b01;
+            //set gate_mar
+            gate_sig = marmux_sig;
+            
+           end
+        s_23 :  //MDR <- SR
             begin
-
-
-        ld_mar= 1'b0;
-
-            end
-        s_23 :
-            begin
-              ld_mdr = 1'b1;
-
-
-            end
-        s_16_1, s_16_2, s_16_3 :
-            begin
-           mem_wr_ena= 1'b0;
+             ld_mdr = 1'b1;
+             //put sr onto bus
+             sr1_sig = 2'b00;   //during this state, sr is at ir[11:9]
+             addr1_sig = 1'b1;
+             addr2_sig = 2'b00;
+             gate_sig = marmux_sig;
+             mio_en = 0;    //get sr from databus
             end
             
-    //jsr
-        s_4 :
+        s_16_1, s_16_2, s_16_3 :    // M[mar] <- mdr (memory address was set before in s_7, now just write to it)
             begin
-             pcmux_sig = 2'b01;
+              mem_wr_ena= 1'b1; //enable write to memory
+            end
+            
+//jsr
+        s_4 :   // r7 <- pc (this is when dr = 111) !
+            begin
+             dr_sig = 1'b1; //set dr=111
+             gate_sig = pc_sig; //put pc onto bus so register unit can get it
+             ld_reg = 1'b1;
             end
         s_21 :
             begin
-            pcmux_sig = 2'b00;
+               pcmux_sig = 2'b10;   //have pc get from addrmux output
+               addr1_sig = 1'b0;    //add pc
+               addr2_sig = 2'b11;   //add offset ir[10:0]
+               ld_pc = 1'b1;
             end
     
-    //jmp
+//jmp
         s_12 :
             begin
-            pcmux_sig = 2'b10;
-
-//            ld_pc = 1'b1;
+            pcmux_sig = 2'b10;  //pc gets from addrmux
+            ld_pc = 1'b1;
+            addr1_sig = 1'b1;   //add sr1
+            addr2_sig = 2'b00;  //add 0
             end
             
-    //br (Branch instruction state)
+//br (Branch instruction state)
         s_0 : 
             begin
                 //next state depends on ben (in other block)
             end
 
-    //fetch
+//fetch
         s_18 : 
             begin
                 //set gate pc
@@ -281,7 +299,7 @@ begin
                 ld_ir = 1'b1;
             end
             
-    //pause
+//pause
         pause_ir1: ld_led = 1'b1; 
         pause_ir2: ld_led = 1'b1;
 

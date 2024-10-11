@@ -60,9 +60,11 @@ logic [15:0] alu_op2;   //second register input for alu
 
 //3 bit inputs for when doing operations
 logic [2:0]    sr1_in;  //determined by sr1 mux
+logic [1:0]    sr1_sig;
 logic [2:0]    sr2_in;  //always ir[2:0]
 
 logic [15:0]    dr;     //determined by dr mux
+logic           dr_sig;
 logic           ld_reg;
 
 // State machine, you need to fill in the code here as well
@@ -98,7 +100,9 @@ control cpu_control (
     .addr2_sig  (addr2_sig),
     
     .aluk   (aluk),
-    .sr2mux_sig (sr2mux_sig)
+    .sr2mux_sig (sr2mux_sig),
+    .sr1_sig    (sr1_sig),
+    .dr_sig     (dr_sig)
 );
 
 register_unit register_unit (   //DONE~~~
@@ -178,6 +182,20 @@ mdr_mux mdr_mux(
     .mdr_mux_out    (mdr_mux_out)
 );
 
+sr1_in_mux sr1_in_mux(
+    .sr1_sig    (sr1_sig), //COMES FROM CONTROL - 00 for ir[11:9] (str sr), 01 for ir[8:6] (normal), 10 for sr1 = 110
+    .ir         (ir),
+    
+    .sr1_final  (sr1_in)
+);
+
+dr_mux dr_mux(
+    .dr_sig     (dr_sig), //comes from control
+    .ir         (ir),
+    
+    .dr_final   (dr)
+);
+
 //switches displayed on LEDs 
 assign led_o = ir;
 assign hex_display_debug = ir;
@@ -238,25 +256,8 @@ begin
     opcode = ir[3:0];
 //ben = 1 if the nzp matches nzp of ir
     ben = (ir[11] & nzp_out[2]) + (ir[10] + nzp_out[1]) + (ir[9] + nzp_out[0]);
-//sr1_in 
-    if(opcode == 0111) begin
-        sr1_in = ir[8:6];
-    end
-    else begin
-        sr1_in = ir[11:9];
-    end
-//sr2_in
+//sr2 is always the same
     sr2_in = ir[2:0];
-//dr
-    case(opcode)
-        4'b0001, 4'b0101, 4'b1001, 4'b0110:
-        begin
-            dr = ir[11:9];
-        end
-        
-        default:
-            dr = 3'b111;
-    endcase
 end
 
 always_ff @(posedge clk) 
