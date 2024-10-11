@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2022.2 (win64) Build 3671981 Fri Oct 14 05:00:03 MDT 2022
-| Date             : Wed Oct  2 18:29:42 2024
+| Date             : Fri Oct 11 00:29:50 2024
 | Host             : AjaThinkPad running 64-bit major release  (build 9200)
 | Command          : report_power -file processor_top_power_routed.rpt -pb processor_top_power_summary_routed.pb -rpx processor_top_power_routed.rpx
 | Design           : processor_top
@@ -53,14 +53,14 @@ Table of Contents
 | On-Chip        | Power (W) | Used     | Available | Utilization (%) |
 +----------------+-----------+----------+-----------+-----------------+
 | Clocks         |     0.001 |        3 |       --- |             --- |
-| Slice Logic    |    <0.001 |      404 |       --- |             --- |
-|   LUT as Logic |    <0.001 |      108 |     32600 |            0.33 |
-|   CARRY4       |    <0.001 |       27 |      8150 |            0.33 |
-|   Register     |    <0.001 |      206 |     65200 |            0.32 |
-|   Others       |     0.000 |       47 |       --- |             --- |
-| Signals        |    <0.001 |      381 |       --- |             --- |
+| Slice Logic    |    <0.001 |      392 |       --- |             --- |
+|   LUT as Logic |    <0.001 |      120 |     32600 |            0.37 |
+|   CARRY4       |    <0.001 |       23 |      8150 |            0.28 |
+|   Register     |    <0.001 |      187 |     65200 |            0.29 |
+|   Others       |     0.000 |       45 |       --- |             --- |
+| Signals        |    <0.001 |      374 |       --- |             --- |
 | Block RAM      |     0.002 |        1 |        75 |            1.33 |
-| I/O            |     0.007 |       60 |       210 |           28.57 |
+| I/O            |     0.007 |       59 |       210 |           28.10 |
 | Static Power   |     0.074 |          |           |                 |
 | Total          |     0.086 |          |           |                 |
 +----------------+-----------+----------+-----------+-----------------+
@@ -145,6 +145,7 @@ Table of Contents
 |     sram0       |     0.001 |
 |       U0        |     0.001 |
 |   slc3          |     0.001 |
+|     cpu         |     0.001 |
 +-----------------+-----------+
 
 

@@ -235,7 +235,7 @@ load_reg #(.DATA_WIDTH(16)) mdr_reg (
     .reset(reset),
 
     .load(ld_mdr),
-    .data_i(mdr_mux_out),   //MAKE THIS MUX
+    .data_i(mdr_mux_out),
 
     .data_q(mdr)
 );
@@ -260,28 +260,29 @@ begin
     sr2_in = ir[2:0];
 end
 
-always_ff @(posedge clk) 
-    begin
-    if (reset) 
-    begin
-        mar <= 16'b0; 
-    end 
-    else if (ld_mar) 
-    begin
-        mar <= pc; // load PC into mar
-    end
-end
+// from before wrote mar and mdr registers
+//always_ff @(posedge clk) 
+//    begin
+//    if (reset) 
+//    begin
+//        mar <= 16'b0; 
+//    end 
+//    else if (ld_mar) 
+//    begin
+//        mar <= pc; // load PC into mar
+//    end
+//end
 
-always_ff @(posedge clk) 
-    begin
-    if (reset) 
-    begin
-        mdr <= 16'b0; 
-    end 
-    else if (ld_mdr) 
-    begin
-        mdr <= mem_rdata; //load data to mdr
-    end
-end
+//always_ff @(posedge clk) 
+//    begin
+//    if (reset) 
+//    begin
+//        mdr <= 16'b0; 
+//    end 
+//    else if (ld_mdr) 
+//    begin
+//        mdr <= mem_rdata; //load data to mdr
+//    end
+//end
 
 endmodule

@@ -134,7 +134,7 @@ begin
 
         1101:  // PAUSE
         begin
-            ld_led = 1'b1;
+            state = pause_ir1;
         end
 
     endcase
