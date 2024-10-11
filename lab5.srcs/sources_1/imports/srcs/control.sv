@@ -8,8 +8,6 @@ module control (
 
 	input logic 		continue_i,
 	input logic 		run_i,
-    input logic [15:0] pc_gate,	
-    input logic [15:0] bus,	
     input logic [15:0] gate_alu,	
     input logic [15:0] gate_marmux,	
 	
@@ -18,9 +16,6 @@ module control (
     input   logic [15:0]    sr2_,
     input   logic [15:0]    dr_in,
 //    input   logic [15:0]    ld_reg,
-    input   logic [15:0]    sext,
-    
-    input  logic [15:0]     pc_in,
 	
 	output logic [15:0]       mar,
     output logic [15:0]       mdr,
@@ -45,11 +40,13 @@ module control (
 	output logic		mem_mem_ena, // Mem Operation Enable
 	output logic		mem_wr_ena,  // Mem Write Enable
 	
-	output  logic [15:0]   pc_out,
+	//output  logic [15:0]   pc_out,
 	output  logic [15:0]   ld_reg,
 	
-    output  logic [15:0] dr_out,
+    //output  logic [15:0] dr_out,
     output logic [3:0] gate_sig,
+    output logic addr1_sig,
+    output logic [1:0] addr2_sig,
 
     output logic [2:0] aluk
 	
@@ -238,12 +235,17 @@ begin
            begin
                mem_mem_ena = 1'b1;
                ld_mdr = 1'b1;
-        mdr = mem_addr[mar];
+               mdr = mem_addr[mar];
 
            end
         s_27 :
            begin
-            dr_out = mdr;
+            //load dr with mdr
+            ld_reg = 1'b1;  //ld reg signal
+            //set addr mux signals to output mdr
+            addr1_sig = 1'b1; //sr1
+            addr2_sig = 2'b00;
+            gate_sig = 0001; //put mdr onto databus
         //set cc
             if (dr_in == 0) Z = 1; else Z = 0;
             if (dr_in[15] == 1) N = 1; else N = 0;

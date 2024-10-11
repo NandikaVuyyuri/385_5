@@ -56,6 +56,8 @@ logic [15:0] sr1_out;
 logic [15:0] sr2_out;
 
 logic [3:0] gate_sig;   //signals what gate goes to databus
+logic addr1_sig;        //signals for addr mux
+logic [1:0] addr2_sig;
 
 logic [1:0] aluk;   //tells alu which operation to do (2 bit)
 logic [15:0] alu_op2;   //second register input for alu
@@ -71,18 +73,16 @@ control cpu_control (
     .reset       (reset),
     .ir          (ir),      //holds the current instruction being executed
     .ben         (ben),     //tells cpu whether a branch should be taken 
-    .opcode      (),
+    .opcode      (ir[3:0]),
     .continue_i  (continue_i), //resume operation after pause
     .run_i       (run_i),
-    //pc_gate,  //NOT USED - DELETE FROM CONTROL
-    //bus,	 //NOT USED
+
     .gate_alu    (gate_alu),
     .gate_marmux (gate_marmux),
     .sr1_       (sr1_out),
     .sr2_       (sr2_out),
     .dr_in      (dr),
-    //sext  //NOT USED
-    //pc_in      //NOT USED
+
 //~~~OUTPUTS~~~
     .mar        (),
     .mdr        (),
@@ -101,8 +101,10 @@ control cpu_control (
     .mem_wr_ena  (mem_wr_ena),
     //.pc_out     (),   //not used
     .ld_reg     (ld_reg),
-    //.dr_out     (),   //not used
+    //.dr_out     (),
     .gate_sig   (gate_sig),
+    .addr1_sig  (addr1_sig),
+    .addr2_sig  (addr2_sig),
     
     .aluk   (aluk)
 );
@@ -152,9 +154,9 @@ databus_demux databus_demuxer(  //DONE~~~
     .final_gate     (databus)
 );
 
-addr_mux addr_mux(              // PLS FIX - CONNECT ADDR MUX SIGNALS TO CONTROL
-    .addr1_sig  (), //0 for pc, 1 for sr1
-    .addr2_sig  (), //2 bit
+addr_mux addr_mux(              //DONE~~~
+    .addr1_sig  (addr1_sig), //0 for pc, 1 for sr1
+    .addr2_sig  (addr2_sig), //2 bit
     .sr1        (sr1_out), //mux 1
     .pc         (gate_pc),  //mux 1
     .ir         (ir),  //mux 2
