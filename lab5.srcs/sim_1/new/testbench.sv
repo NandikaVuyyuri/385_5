@@ -29,25 +29,24 @@ module testbench();
         reset <= 0;
         run_i <= 0;
         continue_i <= 0;
-        #10
+        #1
         reset <= 1;
         #10
         reset <= 0;
-        #10
         sw_i <= 3;
         #10
         run_i <= 1;
         #10
         run_i <= 0;
-        #10
+        #100
         //continue_i <= 1;
-        #10
+        //#10
         //continue_i <= 0;
-        #10
+        //#10
         //continue_i <= 1;
-        #10
+        //#10
         //continue_i <= 0;
-        #50
+        //#50
         reset <= 1;
         #10
         reset <= 0;

@@ -35,7 +35,7 @@ logic [15:0] pcmux_data;
 
 logic [15:0] mar;
 logic [15:0] ir;
-logic [3:0] opcode;
+//logic [3:0] opcode;
 
 logic ben;
 logic [2:0] nzp_in;
@@ -78,7 +78,7 @@ control cpu_control (
     .reset       (reset),
     .ir          (ir),      //holds the current instruction being executed
     .ben         (ben),     //tells cpu whether a branch should be taken 
-    .opcode      (opcode),
+    //.opcode      (opcode),
     .continue_i  (continue_i), //resume operation after pause
     .run_i       (run_i),
 
@@ -253,7 +253,7 @@ load_reg #(.DATA_WIDTH(3)) nzp_reg (
 //CALCULATE BEN
 always_comb
 begin
-    opcode = ir[3:0];
+    //opcode = ir[15:12];
 //ben = 1 if the nzp matches nzp of ir
     ben = (ir[11] & nzp_out[2]) + (ir[10] + nzp_out[1]) + (ir[9] + nzp_out[0]);
 //sr2 is always the same

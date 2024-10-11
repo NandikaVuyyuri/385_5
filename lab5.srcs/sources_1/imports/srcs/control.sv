@@ -4,7 +4,7 @@ module control (
 
 	input logic [15:0]	ir,
 	input logic			ben,
-    input logic [3:0]   opcode,
+    //input logic [3:0]   opcode,
 
 	input logic 		continue_i,
 	input logic 		run_i,
@@ -90,54 +90,6 @@ begin
 		state <= halted;
 	else 
 		state <= state_nxt;
-//opcode states
-    case (opcode)
-        0001:  // ADD
-        begin
-            state <= s_1;
-        end
-
-        0101:  // AND
-        begin
-            state = s_5;
-        end
-        
-        1001:  // NOT
-        begin
-            state = s_9;
-        end
-        
-        0110:  // LDR
-        begin
-            state = s_6;
-        end
-        
-        0111:  // STR
-        begin
-            state = s_7;
-        end
-        
-        0100:  // JSR 
-        begin
-            state = s_4;
-        end
-        
-        1100:  // JMP
-        begin
-            state = s_12;
-        end
-
-        0000:  // BR
-        begin
-            state = s_0;  // Enter the branch state
-        end
-
-        1101:  // PAUSE
-        begin
-            state = pause_ir1;
-        end
-
-    endcase
 end
 
 
@@ -152,7 +104,7 @@ begin
     ld_pc = 1'b0;
     ld_led = 1'b0;
     ld_cc = 1'b0;
-     
+    
     pcmux_sig = 2'b00;
     mio_en = 1'b1;  //mio_en only changes to 0 in state 23
     //usually always reading memory data into mdr
@@ -166,8 +118,11 @@ begin
     dr_sig = 1'b0;
 	
 	ld_reg = 1'b0;
+	
+	mem_mem_ena = 1'b0;
+	mem_wr_ena = 1'b0;
 
-    case (state)        // PLEASE FIX SIGNALS - CHECK SCHEMATIC CAREFULLY
+    case (state)
         halted: ;
 //add
         s_1 :
@@ -199,7 +154,7 @@ begin
 //ldr
         s_6 :   //MAR <- b+off6
            begin
-            ld_mar= 1'b0;
+            ld_mar= 1'b1;
             //put b+off6 onto bus
             addr1_sig = 1'b1;
             addr2_sig = 2'b01;
@@ -224,7 +179,7 @@ begin
  //str
         s_7 :   //MAR <- b+off6
            begin
-            ld_mar= 1'b0;
+            ld_mar= 1'b1;
             //put b+off6 onto bus
             addr1_sig = 1'b1;
             addr2_sig = 2'b01;
@@ -237,15 +192,19 @@ begin
              ld_mdr = 1'b1;
              //put sr onto bus
              sr1_sig = 2'b00;   //during this state, sr is at ir[11:9]
-             addr1_sig = 1'b1;
-             addr2_sig = 2'b00;
-             gate_sig = marmux_sig;
+//             addr1_sig = 1'b1;    //instead of adding 0
+//             addr2_sig = 2'b00;
+//             gate_sig = marmux_sig;
+            //pass sr1
+             aluk = 2'b11;
+             gate_sig = alu_sig;
              mio_en = 0;    //get sr from databus
             end
             
         s_16_1, s_16_2, s_16_3 :    // M[mar] <- mdr (memory address was set before in s_7, now just write to it)
             begin
-              mem_wr_ena= 1'b1; //enable write to memory
+              mem_wr_ena = 1'b1; //enable write to memory
+              mem_mem_ena = 1'b1;
             end
             
 //jsr
@@ -273,11 +232,16 @@ begin
             end
             
 //br (Branch instruction state)
-        s_0 : 
+        s_0 : ; //next state depends on ben (in other block)
+        
+        s_22 :
             begin
-                //next state depends on ben (in other block)
+                pcmux_sig = 2'b10;  //pc gets from addrmux
+                ld_pc = 1'b1;
+                addr1_sig = 1'b0;   //add pc
+                addr2_sig = 2'b10;  //add offset 9
             end
-
+            
 //fetch
         s_18 : 
             begin
@@ -317,6 +281,59 @@ begin
         halted : 
             if (run_i) 
                 state_nxt = s_18;
+        
+        //s_32 is where you check what opcode
+        s_32 :
+            case (ir[15:12])
+                4'b0001:  // ADD
+                begin
+                    state_nxt = s_1;
+                end
+        
+                4'b0101:  // AND
+                begin
+                    state_nxt = s_5;
+                end
+                
+                4'b1001:  // NOT
+                begin
+                    state_nxt = s_9;
+                end
+                
+                4'b0110:  // LDR
+                begin
+                    state_nxt = s_6;
+                end
+                
+                4'b0111:  // STR
+                begin
+                    state_nxt = s_7;
+                end
+                
+                4'b0100:  // JSR 
+                begin
+                    state_nxt = s_4;
+                end
+                
+                4'b1100:  // JMP
+                begin
+                    state_nxt = s_12;
+                end
+        
+                4'b0000:  // BR
+                begin
+                    state_nxt = s_0;  // Enter the branch state
+                end
+        
+                4'b1101:  // PAUSE
+                begin
+                    state_nxt = pause_ir1;
+                end
+                
+                default:
+                    state_nxt = s_18;
+            endcase
+        
         //alu operations
         s_1 :
             state_nxt = s_18;
@@ -365,8 +382,9 @@ begin
                 state_nxt = s_22;
             end
             
-            else
+            else begin
                 state_nxt = s_18;
+            end
         s_22 :
             state_nxt = s_18;
             
