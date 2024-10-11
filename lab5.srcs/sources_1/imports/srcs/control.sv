@@ -32,7 +32,7 @@ module control (
     output logic addr1_sig,
     output logic [1:0] addr2_sig,
 
-    output logic [2:0] aluk,
+    output logic [1:0] aluk,
     output logic sr2mux_sig,
     output logic [1:0] sr1_sig,
     output logic dr_sig
@@ -112,7 +112,7 @@ begin
     addr1_sig = 1'b0;
     addr2_sig = 2'b00;
     
-    aluk = 3'b000;
+    aluk = 2'b00;
     sr2mux_sig = 1'b0;
     sr1_sig = 2'b01;
     dr_sig = 1'b0;
@@ -129,7 +129,7 @@ begin
           begin
             ld_reg = 1'b1;
             aluk = 2'b00;
-            gate_sig = alu_sig; //0010;
+            gate_sig = 4'b0010;//alu_sig; //0010;
             ld_cc = 1'b1;
             //sr2 depends on ir (use sr2 or ir4sext)
             sr2mux_sig = ir[5];
@@ -139,7 +139,7 @@ begin
            begin
             ld_reg = 1'b1;
             aluk = 2'b01;
-            gate_sig = alu_sig; //0010;
+            gate_sig = 4'b0010; //alu_sig; //0010;
             ld_cc = 1'b1;
             sr2mux_sig = ir[5];
            end
@@ -148,7 +148,7 @@ begin
            begin
             ld_reg = 1'b1;
             aluk = 2'b10;
-            gate_sig = alu_sig; //0010;
+            gate_sig = 4'b0010;//alu_sig; //0010;
             ld_cc = 1'b1;
            end
 //ldr
@@ -159,7 +159,7 @@ begin
             addr1_sig = 1'b1;
             addr2_sig = 2'b01;
             //set gate_mar
-            gate_sig = marmux_sig; //4'b1000;
+            gate_sig = 4'b1000; //marmux_sig; //4'b1000;
            end
            
         s_25_1, s_25_2, s_25_3 : //mdr <- m[mar] (mar was loaded in previous state, so now get the memory at that mar)
@@ -172,7 +172,7 @@ begin
            begin
             //load dr with mdr
             ld_reg = 1'b1;  //ld reg signal
-            gate_sig = mdr_sig; //0001; //put mdr onto databus
+            gate_sig = 4'b0001; //mdr_sig; //0001; //put mdr onto databus
             ld_cc = 1'b1; //set cc
            end
            
@@ -184,7 +184,7 @@ begin
             addr1_sig = 1'b1;
             addr2_sig = 2'b01;
             //set gate_mar
-            gate_sig = marmux_sig;
+            gate_sig = 4'b1000; //marmux_sig;
             
            end
         s_23 :  //MDR <- SR
@@ -197,7 +197,7 @@ begin
 //             gate_sig = marmux_sig;
             //pass sr1
              aluk = 2'b11;
-             gate_sig = alu_sig;
+             gate_sig = 4'b0010; //alu_sig;
              mio_en = 0;    //get sr from databus
             end
             
@@ -211,7 +211,7 @@ begin
         s_4 :   // r7 <- pc (this is when dr = 111) !
             begin
              dr_sig = 1'b1; //set dr=111
-             gate_sig = pc_sig; //put pc onto bus so register unit can get it
+             gate_sig = 4'b0100; //pc_sig; //put pc onto bus so register unit can get it
              ld_reg = 1'b1;
             end
         s_21 :
@@ -227,6 +227,9 @@ begin
             begin
             pcmux_sig = 2'b10;  //pc gets from addrmux
             ld_pc = 1'b1;
+            //pass sr1 (baser) - same as using addrsig
+//            aluk = 2'b11;
+//            gate_sig = 4'b0010; //alu_sig;
             addr1_sig = 1'b1;   //add sr1
             addr2_sig = 2'b00;  //add 0
             end
@@ -246,7 +249,7 @@ begin
         s_18 : 
             begin
                 //set gate pc
-                gate_sig = pc_sig;
+                gate_sig = 4'b0100; //pc_sig;
                 ld_mar = 1'b1;
                 pcmux_sig = 2'b00;
                 ld_pc = 1'b1;
@@ -259,7 +262,7 @@ begin
         s_35 : 
             begin 
                 //set gate mdr
-                gate_sig = mdr_sig;
+                gate_sig = 4'b0001; //mdr_sig;
                 ld_ir = 1'b1;
             end
             

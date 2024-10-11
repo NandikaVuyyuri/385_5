@@ -17,19 +17,19 @@ module databus_demux(
 always_comb
 begin
     case(gate_sig)
-        3'b1000:
+        4'b1000:
         begin
             final_gate = gate_marmux;
         end
-        3'b0100:
+        4'b0100:
         begin
             final_gate = gate_pc;
         end
-        3'b0010:
+        4'b0010:
         begin
             final_gate = gate_alu;
         end
-        3'b0001:
+        4'b0001:
         begin
             final_gate = gate_mdr;
         end

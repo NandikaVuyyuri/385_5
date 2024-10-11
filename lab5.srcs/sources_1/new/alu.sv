@@ -81,7 +81,7 @@ module alu_and(
     input logic [15:0] B,
     output logic [15:0] d_out
 );
-    assign d_out = A & B;
+    assign d_out =  A & B; //16'b0101010101010101; //<- test
 endmodule
 
 
