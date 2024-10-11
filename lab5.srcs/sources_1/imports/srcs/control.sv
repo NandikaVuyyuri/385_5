@@ -8,52 +8,39 @@ module control (
 
 	input logic 		continue_i,
 	input logic 		run_i,
-    input logic [15:0] gate_alu,	
-    input logic [15:0] gate_marmux,	
 	
-
-    input   logic [15:0]    sr1_,
-    input   logic [15:0]    sr2_,
-    input   logic [15:0]    dr_in,
-//    input   logic [15:0]    ld_reg,
-	
-	output logic [15:0]       mar,
-    output logic [15:0]       mdr,
-    output logic [15:0]       sig_output,
-
+//OUTPUTS~~~~~
 	output logic		ld_mar,
 	output logic		ld_mdr,
 	output logic		ld_ir,
 	output logic		ld_pc,
 	output logic        ld_led,
-						
-	output logic		gate_pc,
-	output logic		gate_mdr,
+	output logic        ld_cc,
+
 	output logic [15:0] marmux_out,
     output  logic [15:0] mem_addr,      //memory address
 
-						
 	output logic [1:0]	pcmux_sig,
 	
-	//You should add additional control signals according to the SLC-3 datapath design
-
 	output logic		mem_mem_ena, // Mem Operation Enable
 	output logic		mem_wr_ena,  // Mem Write Enable
 	
-	//output  logic [15:0]   pc_out,
-	output  logic [15:0]   ld_reg,
+	output logic          ld_reg,
+	output logic          mio_en,
 	
-    //output  logic [15:0] dr_out,
     output logic [3:0] gate_sig,
     output logic addr1_sig,
     output logic [1:0] addr2_sig,
 
-    output logic [2:0] aluk
-	
+    output logic [2:0] aluk,
+    output logic sr2mux_sig
 );
-    logic  cc_signal;
-    logic  mar_ = mar;
-    logic N, Z, P;  // Declaration of NZP condition codes
+
+    //gate signals for each gate
+    logic marmux_sig = 4'b1000;
+    logic pc_sig = 4'b0100;
+    logic alu_sig = 4'b0010;
+    logic mdr_sig = 4'b0001;
     
 	enum logic [6:0] {
 		halted, 
@@ -94,17 +81,15 @@ module control (
 	} state, state_nxt;   // Internal state logic
 
 
-	always_ff @ (posedge clk)
-	begin
+always_ff @ (posedge clk)
+begin
+//default states
 	if (reset) 
 		state <= halted;
 	else 
 		state <= state_nxt;
-	//end
-   
-
+//opcode states
     case (opcode)
-    
         0001:  // ADD
         begin
             state <= s_1;
@@ -147,11 +132,10 @@ module control (
 
         1101:  // PAUSE
         begin
-        ld_led = 1'b1;
+            ld_led = 1'b1;
         end
 
     endcase
-//end
 end
 
 
@@ -165,91 +149,72 @@ begin
     ld_ir = 1'b0;
     ld_pc = 1'b0;
     ld_led = 1'b0;
-    
-    gate_pc = 1'b0;
-    gate_mdr = 1'b0;
+    ld_cc = 1'b0;
      
     pcmux_sig = 2'b00;
+    mio_en = 1'b0;  //mio_en only changes to 1 in state 23
+    gate_sig = 4'b0000;
+    addr1_sig = 1'b0;
+    addr2_sig = 2'b00;
+    
+    aluk = 3'b000;
+    sr2mux_sig = 1'b0;
+	
+	ld_reg = 1'b0;
 
-    //default sig
-       gate_sig = 0000;
     case (state)        // PLEASE FIX SIGNALS - CHECK SCHEMATIC CAREFULLY
         halted: ; 
         s_1 :       //add
           begin
             ld_reg = 1'b1;
-            sig_output = 1'b1;
             aluk = 2'b00;
-            gate_sig = 0010;
-
-            //  condition codes based on result
-            if (dr_in == 0) Z = 1; else Z = 0;
-            if (dr_in[15] == 1) N = 1; else N = 0;
-            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
+            gate_sig = alu_sig; //0010;
+            ld_cc = 1'b1;
+            //sr2 depends on ir (use sr2 or ir4sext)
+            sr2mux_sig = ir[5];
           end
         
         s_5 :       //and
            begin
             ld_reg = 1'b1;
-            sig_output = 1'b1;
-            gate_sig = 0010;
             aluk = 2'b01;
-
-            //  condition codes based on result
-            if (dr_in == 0) Z = 1; else Z = 0;
-            if (dr_in[15] == 1) N = 1; else N = 0;
-            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
+            gate_sig = alu_sig; //0010;
+            ld_cc = 1'b1;
+            sr2mux_sig = ir[5];
            end
            
         s_9 :       //not
            begin
             ld_reg = 1'b1;
-            sig_output = 1'b1;
-            gate_sig = 0010;
             aluk = 2'b10;
-
-            //  condition codes based on result
-            if (dr_in == 0) Z = 1; else Z = 0;
-            if (dr_in[15] == 1) N = 1; else N = 0;
-            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
+            gate_sig = alu_sig; //0010;
+            ld_cc = 1'b1;
            end
     //ldr
         s_6 :
            begin
-
         //load B+off6 into MAR
-        
             ld_mar= 1'b0;
-            //mdr= mar
-        //M[MAR]->MDR
-//        mdr = mem_addr[mar];
-        //dr
-//        dr_out = mdr;
-//        //set cc
-//            if (dr_in == 0) Z = 1; else Z = 0;
-//            if (dr_in[15] == 1) N = 1; else N = 0;
-//            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
-
+            //put b+off6 onto bus
+            addr1_sig = 1;
+            addr2_sig = 01;
+            //set gate_mar
+            gate_sig = marmux_sig; //4'b1000;
            end
         s_25_1, s_25_2, s_25_3 : //you may have to think about this as well to adapt to ram with wait-states
            begin
                mem_mem_ena = 1'b1;
                ld_mdr = 1'b1;
-               mdr = mem_addr[mar];
+               //mdr = mem_addr[mar]; can not do this
+               mio_en = 0; //redundant
 
            end
         s_27 :
            begin
             //load dr with mdr
             ld_reg = 1'b1;  //ld reg signal
-            //set addr mux signals to output mdr
-            addr1_sig = 1'b1; //sr1
-            addr2_sig = 2'b00;
-            gate_sig = 0001; //put mdr onto databus
-        //set cc
-            if (dr_in == 0) Z = 1; else Z = 0;
-            if (dr_in[15] == 1) N = 1; else N = 0;
-            if (dr_in[15] == 0 && dr_in != 0) P = 1; else P = 0;
+            gate_sig = mdr_sig; //0001; //put mdr onto databus
+            ld_cc = 1'b1; //set cc
            end
            
     //str
@@ -292,19 +257,14 @@ begin
     //br (Branch instruction state)
         s_0 : 
             begin
-                // Check BEN based on condition codes (NZP) and instruction bits
-                if ((ir[11] & N) | (ir[10] & Z) | (ir[9] & P)) begin
-                    // If BEN is true, update PC to branch target address
-                    pcmux_sig = 2'b01;  // Select PC + offset
-                    ld_pc = 1'b1;   // Load the new PC value
-                end
-                state_nxt = s_18;  // After branch, go to fetch state
+                //next state depends on ben (in other block)
             end
 
     //fetch
         s_18 : 
-            begin 
-                gate_pc = 1'b1;
+            begin
+                //set gate pc
+                gate_sig = pc_sig;
                 ld_mar = 1'b1;
                 pcmux_sig = 2'b00;
                 ld_pc = 1'b1;
@@ -316,7 +276,8 @@ begin
             end
         s_35 : 
             begin 
-                gate_mdr = 1'b1;
+                //set gate mdr
+                gate_sig = mdr_sig;
                 ld_ir = 1'b1;
             end
             
@@ -382,7 +343,12 @@ begin
             
         //br
         s_0 :
-            state_nxt = s_18;
+            if(ben) begin
+                state_nxt = s_22;
+            end
+            
+            else
+                state_nxt = s_18;
         s_22 :
             state_nxt = s_18;
             

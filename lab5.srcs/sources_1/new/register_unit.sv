@@ -4,7 +4,7 @@ module register_unit(
    
     input   logic [15:0]    d_in,   //data to put into a register
     input   logic [2:0]     dr,  //dr chooses which register to put data into
-    input   logic [15:0]    ld_reg,
+    input   logic           ld_reg, //only load registers with dr when have ld_reg signal
     
     input   logic [2:0]    sr1_in,  //3 bit sr inputs for when doing operations
     input   logic [2:0]    sr2_in,  //SAME AS dr IN THAT IT CHOOSES WHICH REGISTER TO USE
@@ -28,7 +28,7 @@ load_reg #(.DATA_WIDTH(16)) reg0 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[0]), //each demux signal says which reg to load
+    .load   (demux[0] & ld_reg), //each demux signal says which reg to load
     .data_i (d_in),     //load register with data in
 
     .data_q (out0)   //outputs are kept as variables inside reg unit
@@ -39,7 +39,7 @@ load_reg #(.DATA_WIDTH(16)) reg1 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[1]),
+    .load   (demux[1]& ld_reg),
     .data_i (d_in),
 
     .data_q (out1)
@@ -49,7 +49,7 @@ load_reg #(.DATA_WIDTH(16)) reg2 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[2]),
+    .load   (demux[2]& ld_reg),
     .data_i (d_in),
 
     .data_q (out2)
@@ -59,7 +59,7 @@ load_reg #(.DATA_WIDTH(16)) reg3 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[3]),
+    .load   (demux[3]& ld_reg),
     .data_i (d_in),
 
     .data_q (out3)
@@ -69,7 +69,7 @@ load_reg #(.DATA_WIDTH(16)) reg4 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[4]),
+    .load   (demux[4]& ld_reg),
     .data_i (d_in),
 
     .data_q (out4)
@@ -79,7 +79,7 @@ load_reg #(.DATA_WIDTH(16)) reg5 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[5]),
+    .load   (demux[5]& ld_reg),
     .data_i (d_in),
 
     .data_q (out5)
@@ -89,7 +89,7 @@ load_reg #(.DATA_WIDTH(16)) reg6 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[6]),
+    .load   (demux[6]& ld_reg),
     .data_i (d_in),
 
     .data_q (out6)
@@ -99,7 +99,7 @@ load_reg #(.DATA_WIDTH(16)) reg7 (
     .clk    (clk),
     .reset  (reset),
 
-    .load   (demux[7]),
+    .load   (demux[7]& ld_reg),
     .data_i (d_in),
 
     .data_q (out7)

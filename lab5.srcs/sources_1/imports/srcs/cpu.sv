@@ -2,12 +2,6 @@ module cpu (
     input   logic        clk,
     input   logic        reset,
 
-
-    input   logic [2:0]    sr1_in,  //3 bit inputs for when doing operations
-    input   logic [2:0]    sr2_in,
-    input   logic [15:0]    dr,
-    input   logic [15:0]    ld_reg,
-
     input   logic        run_i,
     input   logic        continue_i,
     output  logic [15:0] hex_display_debug,
@@ -17,11 +11,8 @@ module cpu (
     output  logic [15:0] mem_wdata,     //memory write data
     output  logic [15:0] mem_addr,      //memory address
     output  logic        mem_mem_ena,   //memroy read enable
-    output  logic        mem_wr_ena, //mem write enable
-    output   logic [15:0] pc_gate     //memory read data
-
+    output  logic        mem_wr_ena //mem write enable
 );
-
 
 // Internal connections, follow the datapath block diagram and add the additional needed signals
 logic ld_mar; 
@@ -29,25 +20,30 @@ logic ld_mdr;
 logic ld_ir; 
 logic ld_pc; 
 logic ld_led;
+logic ld_cc;
 // DATABUS and GATES LOGIC ~~~
-logic [15:0] gate_marmux;   //all of these are same as pc, mdr, etc...
-logic [15:0] gate_pc;       //they just have gate in front to show that they are put onto data bus
-logic [15:0] gate_alu;
-logic [15:0] gate_mdr;
-logic [15:0] gate_sig;  //signal for which gate to put onto databus
+logic [15:0] marmux;   //all of these are same as pc, mdr, etc...
+logic [15:0] pc;    //pc_out from the pc register
+logic [15:0] alu;   //alu output from alu mux
+logic [15:0] mdr;
+logic [3:0] gate_sig;   //signals what gate goes to databus
 logic [15:0] databus;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-assign gate_pc = pcmux_data; //pc that goes to databus
-assign gate_mdr = mdr;
 
 logic [1:0] pcmux_sig; //pcmux signal that determines what goes into pc
 logic [15:0] pcmux_data;
 
 logic [15:0] mar;
-logic [15:0] mdr;
 logic [15:0] ir;
-logic [15:0] pc;    //pc_out from the pc register
+logic [3:0] opcode;
+
 logic ben;
+logic [2:0] nzp_in;
+logic [2:0] nzp_out;
+
+logic mio_en;
+logic [15:0] mdr_mux_out;
+logic [15:0] mdr_mux_out;
 
 assign mem_addr = mar;
 assign mem_wdata = mdr;
@@ -55,12 +51,19 @@ assign mem_wdata = mdr;
 logic [15:0] sr1_out;
 logic [15:0] sr2_out;
 
-logic [3:0] gate_sig;   //signals what gate goes to databus
 logic addr1_sig;        //signals for addr mux
 logic [1:0] addr2_sig;
 
 logic [1:0] aluk;   //tells alu which operation to do (2 bit)
+logic sr2mux_sig;
 logic [15:0] alu_op2;   //second register input for alu
+
+//3 bit inputs for when doing operations
+logic [2:0]    sr1_in;  //determined by sr1 mux
+logic [2:0]    sr2_in;  //always ir[2:0]
+
+logic [15:0]    dr;     //determined by dr mux
+logic           ld_reg;
 
 // State machine, you need to fill in the code here as well
 // .* auto-infers module input/output connections which have the same name
@@ -73,40 +76,29 @@ control cpu_control (
     .reset       (reset),
     .ir          (ir),      //holds the current instruction being executed
     .ben         (ben),     //tells cpu whether a branch should be taken 
-    .opcode      (ir[3:0]),
+    .opcode      (opcode),
     .continue_i  (continue_i), //resume operation after pause
     .run_i       (run_i),
 
-    .gate_alu    (gate_alu),
-    .gate_marmux (gate_marmux),
-    .sr1_       (sr1_out),
-    .sr2_       (sr2_out),
-    .dr_in      (dr),
-
 //~~~OUTPUTS~~~
-    .mar        (),
-    .mdr        (),
-    .sig_output     (),
     .ld_mar      (ld_mar),  
     .ld_mdr      (ld_mdr),
     .ld_ir       (ld_ir),
     .ld_pc       (ld_pc),
     .ld_led      (ld_led),
-
-    .gate_pc     (gate_pc), //allows PC output to be sent to bus
-    .gate_mdr    (gate_mdr), //allows mdr output to be sent to bus
+    .ld_cc       (ld_cc),
 
     .pcmux_sig       (pcmux_sig),
     .mem_mem_ena (mem_mem_ena), //enables memory access
     .mem_wr_ena  (mem_wr_ena),
-    //.pc_out     (),   //not used
     .ld_reg     (ld_reg),
-    //.dr_out     (),
+    .mio_en     (mio_en),
     .gate_sig   (gate_sig),
     .addr1_sig  (addr1_sig),
     .addr2_sig  (addr2_sig),
     
-    .aluk   (aluk)
+    .aluk   (aluk),
+    .sr2mux_sig (sr2mux_sig)
 );
 
 register_unit register_unit (   //DONE~~~
@@ -132,24 +124,25 @@ logic [15:0] ir4sext = ir[4:0];
 sr2mux sr2mux(                  //DONE~~~
     .sr2    (sr2_out),
     .sext   (ir4sext),
-    
+    .sext_sig   (sr2mux_sig),    //output sr2 when =0, sext when =1
+                                //SET BY CONTROL UNIT
     .sr_out (alu_op2)   //2nd register input for alu
 );
 
-alu alu(                        //DONE~~~
+alu aluer(                        //DONE~~~
     .A      (sr1_out),
     .B      (alu_op2),
     .aluk   (aluk),     //aluk DEPENDS ON OPCODE, COMES FROM CONTROL
-    .d_out  (gate_alu)  //SHOULD THIS GO TO gate_alu, OR DEPEND ON gate_alu ??
+    .d_out  (alu)
 );
 
 databus_demux databus_demuxer(  //DONE~~~
     .gate_sig       (gate_sig),
     
-    .gate_marmux    (gate_marmux), //1000
-    .gate_pc        (gate_pc),     //0100
-    .gate_alu       (gate_alu),    //0010
-    .gate_mdr       (gate_mdr),    //0001
+    .gate_marmux    (marmux),       //gate_sig = 1000
+    .gate_pc        (pc),     //0100
+    .gate_alu       (alu),    //0010
+    .gate_mdr       (mdr),    //0001
    
     .final_gate     (databus)
 );
@@ -158,31 +151,43 @@ addr_mux addr_mux(              //DONE~~~
     .addr1_sig  (addr1_sig), //0 for pc, 1 for sr1
     .addr2_sig  (addr2_sig), //2 bit
     .sr1        (sr1_out), //mux 1
-    .pc         (gate_pc),  //mux 1
+    .pc         (pc),  //mux 1
     .ir         (ir),  //mux 2
     
-    .marmux_out (gate_marmux)
+    .marmux_out (marmux)
 );
 
 pcmux pcmuxer(                  //DONE~~~
     .pcmux_sig  (pcmux_sig),    //signal
     .databus    (databus),
-    .marmux (gate_marmux),
+    .marmux (marmux),
     .pc_inc (pc+1),  //pc+1, maybe just input pc?
     
     .pcmux_out  (pcmux_data)
 );
 
-//whats displayed on LEDs 
-assign led_o = pc;
-assign hex_display_debug = pc;
+nzp_logic nzp_logic(
+    .databus    (databus),
+    .nzp_new    (nzp_in)
+);
+
+mdr_mux mdr_mux(
+    .mio_en     (mio_en), //signal that comes from control unit
+    .databus    (databus),
+    .rdata      (mem_rdata),
+    .mdr_mux_out    (mdr_mux_out)
+);
+
+//switches displayed on LEDs 
+assign led_o = ir;
+assign hex_display_debug = ir;
 
 load_reg #(.DATA_WIDTH(16)) ir_reg (
     .clk    (clk),
     .reset  (reset),
 
     .load   (ld_ir),
-    .data_i (mdr), //load ir register with mdr
+    .data_i (databus), //load ir register with databus
 
     .data_q (ir)
 );
@@ -196,6 +201,63 @@ load_reg #(.DATA_WIDTH(16)) pc_reg (
 
     .data_q(pc)
 );
+
+load_reg #(.DATA_WIDTH(16)) mar_reg (
+    .clk(clk),
+    .reset(reset),
+
+    .load(ld_mar),
+    .data_i(databus),
+
+    .data_q(mar)
+);
+
+load_reg #(.DATA_WIDTH(16)) mdr_reg (
+    .clk(clk),
+    .reset(reset),
+
+    .load(ld_mdr),
+    .data_i(mdr_mux_out),   //MAKE THIS MUX
+
+    .data_q(mdr)
+);
+
+load_reg #(.DATA_WIDTH(3)) nzp_reg (
+    .clk(clk),
+    .reset(reset),
+
+    .load(ld_cc),
+    .data_i(nzp_in),    //make mux to calculate nzp in
+
+    .data_q(nzp_out)
+);
+
+//CALCULATE BEN
+always_comb
+begin
+    opcode = ir[3:0];
+//ben = 1 if the nzp matches nzp of ir
+    ben = (ir[11] & nzp_out[2]) + (ir[10] + nzp_out[1]) + (ir[9] + nzp_out[0]);
+//sr1_in 
+    if(opcode == 0111) begin
+        sr1_in = ir[8:6];
+    end
+    else begin
+        sr1_in = ir[11:9];
+    end
+//sr2_in
+    sr2_in = ir[2:0];
+//dr
+    case(opcode)
+        4'b0001, 4'b0101, 4'b1001, 4'b0110:
+        begin
+            dr = ir[11:9];
+        end
+        
+        default:
+            dr = 3'b111;
+    endcase
+end
 
 always_ff @(posedge clk) 
     begin
