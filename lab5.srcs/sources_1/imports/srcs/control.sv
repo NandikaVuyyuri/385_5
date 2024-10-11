@@ -172,6 +172,7 @@ begin
            begin
             //load dr with mdr
             ld_reg = 1'b1;  //ld reg signal
+            dr_sig = 1'b0;
             gate_sig = 4'b0001; //mdr_sig; //0001; //put mdr onto databus
             ld_cc = 1'b1; //set cc
            end

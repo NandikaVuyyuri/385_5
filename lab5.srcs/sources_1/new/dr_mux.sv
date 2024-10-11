@@ -5,7 +5,7 @@ module dr_mux(
     input logic dr_sig,   //0 choose ir[11:9], 1 choose dr='111'
     input logic [15:0] ir,
     
-    output logic dr_final
+    output logic [2:0] dr_final
     );
 
 always_comb

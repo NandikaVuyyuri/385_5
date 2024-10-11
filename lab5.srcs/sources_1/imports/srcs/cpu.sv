@@ -63,7 +63,7 @@ logic [2:0]    sr1_in;  //determined by sr1 mux
 logic [1:0]    sr1_sig;
 logic [2:0]    sr2_in;  //always ir[2:0]
 
-logic [15:0]    dr;     //determined by dr mux
+logic [2:0]    dr;     //determined by dr mux
 logic           dr_sig;
 logic           ld_reg;
 
