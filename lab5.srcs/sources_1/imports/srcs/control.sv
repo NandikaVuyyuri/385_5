@@ -16,6 +16,7 @@ module control (
 	output logic		ld_pc,
 	output logic        ld_led,
 	output logic        ld_cc,
+	output logic        ld_ben,
 
 	output logic [15:0] marmux_out,
     output  logic [15:0] mem_addr,      //memory address
@@ -121,9 +122,16 @@ begin
 	
 	mem_mem_ena = 1'b0;
 	mem_wr_ena = 1'b0;
+	
+	ld_ben = 1'b0;
 
     case (state)
         halted: ;
+//state 32 needs to load ben
+        s_32 :
+          begin
+            ld_ben = 1'b1;
+          end
 //add
         s_1 :
           begin

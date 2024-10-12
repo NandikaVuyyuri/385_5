@@ -21,6 +21,7 @@ logic ld_ir;
 logic ld_pc; 
 logic ld_led;
 logic ld_cc;
+logic ld_ben;
 // DATABUS and GATES LOGIC ~~~
 logic [15:0] marmux;   //all of these are same as pc, mdr, etc...
 logic [15:0] pc;    //pc_out from the pc register
@@ -42,7 +43,6 @@ logic [2:0] nzp_in;
 logic [2:0] nzp_out;
 
 logic mio_en;
-logic [15:0] mdr_mux_out;
 logic [15:0] mdr_mux_out;
 
 assign mem_addr = mar;
@@ -89,6 +89,7 @@ control cpu_control (
     .ld_pc       (ld_pc),
     .ld_led      (ld_led),
     .ld_cc       (ld_cc),
+    .ld_ben      (ld_ben),
 
     .pcmux_sig       (pcmux_sig),
     .mem_mem_ena (mem_mem_ena), //enables memory access
@@ -105,6 +106,8 @@ control cpu_control (
     .dr_sig     (dr_sig)
 );
 
+//sr2 is always the same
+assign sr2_in = ir[2:0];
 register_unit register_unit (   //DONE~~~
     .clk        (clk),
     .reset      (reset),
@@ -170,11 +173,6 @@ pcmux pcmuxer(                  //DONE~~~
     .pcmux_out  (pcmux_data)
 );
 
-nzp_logic nzp_logic(
-    .databus    (databus),
-    .nzp_new    (nzp_in)
-);
-
 mdr_mux mdr_mux(
     .mio_en     (mio_en), //signal that comes from control unit
     .databus    (databus),
@@ -194,6 +192,18 @@ dr_mux dr_mux(
     .ir         (ir),
     
     .dr_final   (dr)
+);
+
+nzp_logic nzp_logic(
+    .databus    (databus),
+    .nzp_new    (nzp_in)
+);
+
+ben_logic ben_logic(
+    .nzp        (nzp_out),
+    .ir         (ir),
+    
+    .ben_logic_out  (ben)
 );
 
 //switches displayed on LEDs 
@@ -245,20 +255,20 @@ load_reg #(.DATA_WIDTH(3)) nzp_reg (
     .reset(reset),
 
     .load(ld_cc),
-    .data_i(nzp_in),    //make mux to calculate nzp in
+    .data_i(nzp_in),    //have mux to calculate nzp in
 
     .data_q(nzp_out)
 );
 
-//CALCULATE BEN
-always_comb
-begin
-    //opcode = ir[15:12];
-//ben = 1 if the nzp matches nzp of ir
-    ben = (ir[11] & nzp_out[2]) + (ir[10] + nzp_out[1]) + (ir[9] + nzp_out[0]);
-//sr2 is always the same
-    sr2_in = ir[2:0];
-end
+load_reg #(.DATA_WIDTH(1)) ben_reg (
+    .clk(clk),
+    .reset(reset),
+
+    .load(ld_ben),
+    .data_i(ben_logic_out), //ben logic gets loaded when ld_ben is set
+
+    .data_q(ben)
+);
 
 // from before wrote mar and mdr registers
 //always_ff @(posedge clk) 
