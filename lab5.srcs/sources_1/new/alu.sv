@@ -16,9 +16,9 @@ module alu(
 //    logic alu_pass = 2'b11;
     
     //hold the outputs of each operation, only the chosen one gets passed out
-    logic adder_out;
-    logic add_out;
-    logic not_out;
+    logic [15:0] adder_out;
+    logic [15:0] and_out;
+    logic [15:0] not_out;
     
     alu_adder adder(
         .A  (A),
@@ -72,7 +72,7 @@ module alu_adder(
     input logic [15:0] B,
     output logic [15:0] d_out
 );
-    assign d_out = A + B;   
+    assign d_out = A + B; 
 endmodule
 
 
