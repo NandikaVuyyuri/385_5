@@ -39,6 +39,7 @@ logic [15:0] ir;
 //logic [3:0] opcode;
 
 logic ben;
+logic ben_logic_out;
 logic [2:0] nzp_in;
 logic [2:0] nzp_out;
 
@@ -203,7 +204,7 @@ ben_logic ben_logic(
     .nzp        (nzp_out),
     .ir         (ir),
     
-    .ben_logic_out  (ben)
+    .ben_logic_out  (ben_logic_out)
 );
 
 //switches displayed on LEDs 
