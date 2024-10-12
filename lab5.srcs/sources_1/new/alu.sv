@@ -10,10 +10,10 @@ module alu(
     );
     
     //values for the aluk mux inputs (00, 01, 10, 11)
-    logic alu_add = 2'b00;
-    logic alu_and = 2'b01;
-    logic alu_not = 2'b10;
-    logic alu_pass = 2'b11;
+//    logic alu_add = 2'b00;
+//    logic alu_and = 2'b01;
+//    logic alu_not = 2'b10;
+//    logic alu_pass = 2'b11;
     
     //hold the outputs of each operation, only the chosen one gets passed out
     logic adder_out;
@@ -41,22 +41,22 @@ module alu(
     always_comb
     begin
         case (aluk) //CHANGE TO cur_aluk WHEN ALWAYS_FF WORKS
-        alu_add:
+        2'b00:
         begin
             d_out = adder_out;
         end
         
-        alu_and:
+        2'b01:
         begin
             d_out = and_out;
         end
         
-        alu_not:
+        2'b10:
         begin
             d_out = not_out;
         end
         
-        alu_pass:
+        2'b11:
         begin
             d_out = A;
         end

@@ -47,9 +47,8 @@ module testbench();
         //#10
         //continue_i <= 0;
         //#50
-        reset <= 1;
-        #10
-        reset <= 0;
+        sw_i <= 5;
+
         #20
         
         $finish;
