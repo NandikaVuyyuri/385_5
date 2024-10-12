@@ -124,7 +124,7 @@ sign_extender  sign_extender(   //NOT USED~~~
     .sext       (sext)
 );
 
-logic [15:0] ir4sext = ir[4:0];
+logic [15:0] ir4sext = { {11{ir[4]}}, ir[4:0] };
 sr2mux sr2mux(                  //DONE~~~
     .sr2    (sr2_out),
     .sext   (ir4sext),

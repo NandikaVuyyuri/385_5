@@ -71,16 +71,16 @@ begin
             mux2_out = 0;
         end
         2'b01:
-        begin
-            mux2_out = ir[5:0]; //sext ir 5:0
+        begin   //not being sext correctly!!
+            mux2_out = { {10{ir[5]}}, ir[5:0] }; //sext ir 5:0
         end
         2'b10:
         begin
-            mux2_out = ir[8:0]; //sext ir 8:0
+            mux2_out = { {7{ir[5]}}, ir[8:0] }; //sext ir 8:0
         end
         2'b11:
         begin
-            mux2_out = ir[10:0]; //sext ir 10:0
+            mux2_out = { {5{ir[10]}}, ir[10:0]}; //sext ir 10:0
         end
     endcase
 end
