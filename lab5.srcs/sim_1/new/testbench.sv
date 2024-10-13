@@ -33,23 +33,27 @@ module testbench();
         reset <= 1;
         #10
         reset <= 0;
-        sw_i <= 3;
-        #10
+        sw_i <= 49; //hex 31 = MULTIPLICATION test
+        #20
         run_i <= 1;
         #10
         run_i <= 0;
         #100
-        //continue_i <= 1;
-        //#10
-        //continue_i <= 0;
-        //#10
-        //continue_i <= 1;
-        //#10
-        //continue_i <= 0;
-        //#50
-        sw_i <= 5;
-
-        #20
+        //at pause 1 you input first value
+        sw_i <= 4'b0010;    //2
+        #100
+        continue_i <= 1;
+        #10
+        continue_i <= 0;
+        #100
+        //at pause 2 you input second value
+        sw_i <= 4'b0011;    //3
+        #50
+        continue_i <= 1;
+        #10
+        continue_i <= 0;
+        #200
+        //output should be 0011 xor 1010 = 1001 = hex 9
         
         $finish;
     end

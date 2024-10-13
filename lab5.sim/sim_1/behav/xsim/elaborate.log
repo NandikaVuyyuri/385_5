@@ -4,21 +4,15 @@ Running: C:/Xilinx/Vivado/2022.2/bin/unwrapped/win64.o/xelab.exe --incr --debug 
 Using 2 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
-WARNING: [VRFC 10-3091] actual bit length 2 differs from formal bit length 3 for port 'aluk' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:102]
-WARNING: [VRFC 10-3091] actual bit length 16 differs from formal bit length 3 for port 'dr' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:113]
-WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 5 for port 'x' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:123]
-WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 16 for port 'sext' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:124]
-WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 16 for port 'd_out' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/new/alu.sv:26]
-WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 16 for port 'd_out' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/new/alu.sv:32]
-WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 16 for port 'd_out' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/new/alu.sv:37]
-WARNING: [VRFC 10-3091] actual bit length 32 differs from formal bit length 16 for port 'pc_inc' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:168]
-WARNING: [VRFC 10-3091] actual bit length 3 differs from formal bit length 4 for port 'nzp_new' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:175]
-WARNING: [VRFC 10-3091] actual bit length 16 differs from formal bit length 1 for port 'dr_final' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:196]
+WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 5 for port 'x' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:127]
+WARNING: [VRFC 10-3091] actual bit length 1 differs from formal bit length 16 for port 'sext' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:128]
+WARNING: [VRFC 10-3091] actual bit length 32 differs from formal bit length 16 for port 'pc_inc' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:172]
+WARNING: [VRFC 10-3091] actual bit length 3 differs from formal bit length 4 for port 'nzp_new' [C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv:200]
 Completed static elaboration
 Starting simulation data flow analysis
 Completed simulation data flow analysis
 Time Resolution for simulation is 1ps
-Compiling package xil_defaultlib.$unit_addr_mux_sv_3046383129
+Compiling package xil_defaultlib.$unit_addr_mux_sv_3219082603
 Compiling package xil_defaultlib.SLC3_TYPES
 Compiling module xil_defaultlib.sync_debounce
 Compiling module xil_defaultlib.sync_flop
@@ -37,11 +31,13 @@ Compiling module xil_defaultlib.addr1mux
 Compiling module xil_defaultlib.addr2mux
 Compiling module xil_defaultlib.addr_mux
 Compiling module xil_defaultlib.pcmux
-Compiling module xil_defaultlib.nzp_logic
 Compiling module xil_defaultlib.mdr_mux
 Compiling module xil_defaultlib.sr1_in_mux
 Compiling module xil_defaultlib.dr_mux
+Compiling module xil_defaultlib.nzp_logic
+Compiling module xil_defaultlib.ben_logic
 Compiling module xil_defaultlib.load_reg(DATA_WIDTH=3)
+Compiling module xil_defaultlib.load_reg
 Compiling module xil_defaultlib.cpu
 Compiling module xil_defaultlib.nibble_to_hex
 Compiling module xil_defaultlib.hex_driver_default

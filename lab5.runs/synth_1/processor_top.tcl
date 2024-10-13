@@ -70,6 +70,7 @@ proc create_report { reportName command } {
   }
 }
 OPTRACE "synth_1" START { ROLLUP_AUTO }
+set_param chipscope.maxJobs 3
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7s50csga324-1
 
@@ -89,6 +90,7 @@ OPTRACE "Adding files" START { }
 read_verilog -library xil_defaultlib -sv {
   {C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/new/addr_mux.sv}
   {C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/new/alu.sv}
+  {C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/new/ben_logic.sv}
   {C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/control.sv}
   {C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu.sv}
   {C:/Users/Alexandra/Documents/UIUC/ECE 385/385_5/lab5.srcs/sources_1/imports/srcs/cpu_to_io.sv}
